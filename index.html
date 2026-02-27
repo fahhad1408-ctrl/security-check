@@ -3,46 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فحص الأمان</title>
+    <title>نظام الفحص الأمني المتقدم</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #0a0a0a; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
-        .loader { border: 4px solid #333; border-top: 4px solid #0088cc; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto; }
+        body { 
+            background: #0a0a0a; 
+            color: #ffffff; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            text-align: center; 
+            padding: 20px;
+            margin: 0;
+        }
+        .container { max-width: 400px; margin: auto; }
+        
+        /* تأثير التحميل */
+        .loader-box { margin: 50px auto; }
+        .spinner {
+            width: 60px; height: 60px;
+            border: 5px solid #222;
+            border-top: 5px solid #0088cc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .card { background: #1a1a1a; padding: 20px; border-radius: 15px; margin-top: 20px; border: 1px solid #333; }
-        .safe { color: #00ff88; } .danger { color: #ff4444; }
+
+        .card {
+            background: #161616;
+            border: 1px solid #333;
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none; /* مخفي حتى ينتهي التحميل */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #222;
+        }
+        .info-item:last-child { border: none; }
+        
+        .label { color: #888; font-size: 0.9rem; }
+        .value { font-weight: bold; }
+        
+        .safe { color: #00ff88; }
+        .danger { color: #ff4444; }
+
+        h2 { margin-top: 20px; font-size: 1.5rem; }
+        .btn-retry {
+            background: #0088cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            cursor: pointer;
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <h2>جاري فحص الجهاز</h2>
-    <div id="loading"><div class="loader"></div><p id="p">0%</p></div>
-    <div id="res" style="display:none;" class="card">
-        <p>الجهاز: <span id="d"></span></p>
-        <p>النظام: <span id="o"></span></p>
-        <p>التلاعب: <span id="t"></span></p>
-        <h1 id="v"></h1>
-    </div>
-    <script>
-        const w = window.Telegram.WebApp; w.expand();
-        let p = 0;
-        let i = setInterval(() => {
-            p += 5; document.getElementById('p').innerText = p + "%";
-            if (p >= 100) { clearInterval(i); show(); }
-        }, 100);
 
-        function show() {
-            document.getElementById('loading').style.display='none';
-            document.getElementById('res').style.display='block';
-            document.getElementById('d').innerText = /iPhone|iPad/i.test(navigator.userAgent) ? "iPhone" : "Android";
-            document.getElementById('o').innerText = navigator.platform;
-            
-            navigator.geolocation.getCurrentPosition(pos => {
-                let mock = pos.coords.accuracy <= 0;
-                document.getElementById('t').innerText = mock ? "مكتشف 🚩" : "لا يوجد ✅";
-                document.getElementById('v').innerText = mock ? "مشبوه 🚫" : "سليم ✅";
-                document.getElementById('v').className = mock ? "danger" : "safe";
-            }, () => { document.getElementById('v').innerText = "فشل الوصول للموقع"; });
+<div class="container">
+    <div id="loading-screen" class="loader-box">
+        <div class="spinner"></div>
+        <h3 id="load-text">جاري الاتصال بالقمر الصناعي...</h3>
+        <p id="percent">0%</p>
+    </div>
+
+    <div id="result-card" class="card">
+        <h3 style="margin-top:0; color:#0088cc;">تقرير الفحص الأمني</h3>
+        
+        <div class="info-item">
+            <span class="label">نوع الجهاز:</span>
+            <span id="device" class="value">..</span>
+        </div>
+        <div class="info-item">
+            <span class="label">نظام التشغيل:</span>
+            <span id="os" class="value">..</span>
+        </div>
+        <div class="info-item">
+            <span class="label">برامج التلاعب:</span>
+            <span id="mock-status" class="value">..</span>
+        </div>
+        
+        <h2 id="verdict">جاري التحقق..</h2>
+        <button id="retry-btn" class="btn-retry" onclick="location.reload()">إعادة المحاولة</button>
+    </div>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand(); // توسيع الواجهة لتشغل الشاشة كاملة
+
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += Math.floor(Math.random() * 15) + 1;
+        if (progress >= 100) {
+            progress = 100;
+            clearInterval(progressInterval);
+            startLocationCheck();
         }
-    </script>
+        document.getElementById('percent').innerText = progress + "%";
+    }, 150);
+
+    function startLocationCheck() {
+        // فحص نوع الجهاز
+        const ua = navigator.userAgent;
+        document.getElementById('device').innerText = /iPhone|iPad/i.test(ua) ? "iPhone" : "Android";
+        document.getElementById('os').innerText = navigator.platform;
+
+        // إظهار الكارت وإخفاء التحميل
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('result-card').style.display = 'block';
+
+        // طلب إذن الموقع
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const accuracy = position.coords.accuracy;
+                    // كشف التلاعب: إذا كانت الدقة 0 أو مشبوهة جداً
+                    const isMocked = position.coords.accuracy <= 0 || navigator.webdriver;
+
+                    if (isMocked) {
+                        setResult("مكتشف 🚩", "مشبوه 🚫", "danger");
+                        tg.HapticFeedback.notificationOccurred('error');
+                    } else {
+                        setResult("لا يوجد ✅", "سليم ✅", "safe");
+                        tg.HapticFeedback.notificationOccurred('success');
+                    }
+                },
+                (error) => {
+                    document.getElementById('verdict').innerText = "يرجى منح صلاحية الموقع";
+                    document.getElementById('verdict').className = "danger";
+                    document.getElementById('retry-btn').style.display = "inline-block";
+                    tg.HapticFeedback.notificationOccurred('warning');
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            document.getElementById('verdict').innerText = "متصفحك لا يدعم الفحص";
+        }
+    }
+
+    function setResult(mockText, verdictText, className) {
+        document.getElementById('mock-status').innerText = mockText;
+        document.getElementById('mock-status').className = "value " + className;
+        document.getElementById('verdict').innerText = verdictText;
+        document.getElementById('verdict').className = className;
+    }
+</script>
+
 </body>
 </html>
