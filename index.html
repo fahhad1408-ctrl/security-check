@@ -3,83 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فحص الأمان الذكي</title>
+    <title>نظام الفحص الأمني المتقدم</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --primary: #00d1ff; --bg: #050505; --card: #111; --danger: #ff4d4d; --safe: #00ff88; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding: 15px; text-align: center; }
-        .report { background: var(--card); border-radius: 15px; padding: 20px; text-align: right; border: 1px solid #222; margin-top: 20px; }
-        .item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #222; font-size: 14px; }
-        .val { color: var(--primary); font-weight: bold; }
-        .verdict { margin-top: 20px; padding: 15px; border-radius: 12px; font-weight: bold; border: 1px solid #333; }
-        .v-safe { border-color: var(--safe); color: var(--safe); }
-        .v-danger { border-color: var(--danger); color: var(--danger); }
-        .loading-dots:after { content: ' .'; animation: dots 1s steps(5, end) infinite; }
-        @keyframes dots { 0%, 20% { color: rgba(0,0,0,0); text-shadow: .5em 0 0 rgba(0,0,0,0), 1em 0 0 rgba(0,0,0,0); } 40% { color: white; text-shadow: .5em 0 0 rgba(0,0,0,0), 1em 0 0 rgba(0,0,0,0); } 60% { text-shadow: .5em 0 0 white, 1em 0 0 rgba(0,0,0,0); } 80%, 100% { text-shadow: .5em 0 0 white, 1em 0 0 white; } }
+        :root { --primary: #00d1ff; --bg: #050505; --card: #111; --danger: #ff4d4d; --safe: #00ff88; --warning: #ffcc00; }
+        body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 1px solid #222; margin-bottom: 20px; }
+        .report { background: var(--card); border-radius: 15px; padding: 15px; border: 1px solid #222; }
+        .section-title { color: var(--primary); font-size: 12px; font-weight: bold; margin: 15px 0 5px; text-transform: uppercase; border-right: 3px solid var(--primary); padding-right: 10px; }
+        .item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1f1f1f; font-size: 13px; }
+        .val { font-weight: bold; color: #eee; text-align: left; max-width: 60%; }
+        .status-ok { color: var(--safe); }
+        .status-warn { color: var(--warning); }
+        .status-err { color: var(--danger); }
+        .verdict { margin-top: 25px; padding: 15px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 16px; border: 1px solid #333; }
+        .loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+        .spinner { width: 50px; height: 50px; border: 3px solid #222; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <h2 id="title">تقرير أمن الجهاز</h2>
+<div id="loading" class="loading-screen">
+    <div class="spinner"></div>
+    <p style="margin-top: 20px; color: var(--primary);">جاري استخراج بيانات النظام...</p>
+</div>
+
+<div class="header">
+    <h3>تقرير الفحص الجنائي الرقمي</h3>
+</div>
+
+<div class="report">
+    <div class="section-title">بيانات الجهاز والنظام</div>
+    <div class="item"><span>نوع الجهاز:</span><span id="device" class="val">..</span></div>
+    <div class="item"><span>نظام التشغيل:</span><span id="os" class="val">..</span></div>
+    <div class="item"><span>متصفح التشغيل:</span><span id="browser" class="val">..</span></div>
+    <div class="item"><span>بيئة مشبوهة (ملفات تعريف):</span><span id="profile-check" class="val">فحص..</span></div>
+
+    <div class="section-title">الموقع والشبكة</div>
+    <div class="item"><span>الدولة:</span><span id="country" class="val">..</span></div>
+    <div class="item"><span>المدينة/الحي:</span><span id="location" class="val">..</span></div>
+    <div class="item"><span>مزود الإنترنت (ISP):</span><span id="isp" class="val">..</span></div>
+    <div class="item"><span>حالة الـ VPN:</span><span id="vpn" class="val">..</span></div>
+
+    <div class="section-title">الأمان والمطور</div>
+    <div class="item"><span>وضع المطور/التصحيح:</span><span id="dev-mode" class="val">..</span></div>
+    <div class="item"><span>تلاعب بالـ GPS:</span><span id="gps-mock" class="val">..</span></div>
     
-    <div id="report" class="report">
-        <div class="item"><span>الدولة:</span><span id="country" class="val">جاري الجلب</span></div>
-        <div class="item"><span>المدينة:</span><span id="city" class="val">..</span></div>
-        <div class="item"><span>الحي:</span><span id="neighborhood" class="val">..</span></div>
-        <div class="item"><span>مزود الإنترنت:</span><span id="isp" class="val">..</span></div>
-        <div class="item"><span>حالة الـ VPN:</span><span id="vpn-stat" class="val">يفحص..</span></div>
-        
-        <div id="verdict" class="verdict">جاري تحليل البيانات...</div>
-        <button onclick="location.reload()" style="width:100%; padding:12px; margin-top:15px; background:#222; color:#fff; border:1px solid #444; border-radius:10px;">إعادة الفحص</button>
-    </div>
+    <div id="final-verdict" class="verdict">جاري إصدار الحكم النهائي...</div>
+    <button onclick="location.reload()" style="width:100%; padding:12px; margin-top:20px; background:#1a1a1a; color:#888; border:1px solid #333; border-radius:8px;">إعادة فحص الجهاز</button>
+</div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    async function startAudit() {
-        let vpnDetected = false;
-        
-        // جلب بيانات الـ IP مع معالجة الخطأ بهدوء
+    async function runDeepAudit() {
+        let riskScore = 0;
+        const ua = navigator.userAgent;
+
+        // 1. فحص الجهاز والنظام
+        document.getElementById('device').innerText = /iPhone|iPad|iPod/i.test(ua) ? "Apple iPhone" : /Android/i.test(ua) ? "Android Device" : "PC / Unknown";
+        document.getElementById('os').innerText = navigator.platform;
+        document.getElementById('browser').innerText = ua.includes("FBAN") || ua.includes("Instagram") ? "تطبيق وسيط" : "متصفح نظام";
+
+        // كشف ملفات التعريف/البيئة المشبوهة
+        if (navigator.standalone || ua.includes('Mobile/')) {
+            document.getElementById('profile-check').innerText = "أصلية ✅";
+            document.getElementById('profile-check').className = "val status-ok";
+        } else {
+            document.getElementById('profile-check').innerText = "بيئة غير موثوقة ⚠️";
+            document.getElementById('profile-check').className = "val status-warn";
+            riskScore++;
+        }
+
+        // 2. فحص الشبكة والـ VPN (طريقة التوقيت + IP)
         try {
-            const ipRes = await fetch('https://ipinfo.io/json?token=7ba0a7c473729e').catch(() => null); 
+            const ipRes = await fetch('https://ipapi.co/json/').catch(() => null);
+            const offset = new Date().getTimezoneOffset();
             if (ipRes) {
                 const data = await ipRes.json();
-                document.getElementById('country').innerText = data.country;
-                document.getElementById('city').innerText = data.city;
-                document.getElementById('isp').innerText = data.org.split(' ').slice(1).join(' ');
+                document.getElementById('country').innerText = data.country_name;
+                document.getElementById('isp').innerText = data.org;
                 
-                // فحص المنطقة الزمنية
-                const localTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                if (!localTZ.includes(data.timezone.split('/')[1])) vpnDetected = true;
+                // صيد الـ VPN بالساعة والدولة
+                if (offset !== -180 || data.country_code !== 'SA') {
+                    document.getElementById('vpn').innerText = "نشط 🚩";
+                    document.getElementById('vpn').className = "val status-err";
+                    riskScore += 2;
+                } else {
+                    document.getElementById('vpn').innerText = "غير نشط ✅";
+                    document.getElementById('vpn').className = "val status-ok";
+                }
             }
-        } catch(e) {}
+        } catch(e) { riskScore++; }
 
-        // جلب الموقع الجغرافي
+        // 3. فحص الـ GPS والحي ووضع المطور
         navigator.geolocation.getCurrentPosition(async (pos) => {
-            document.getElementById('vpn-stat').innerText = vpnDetected ? "نشط 🚩" : "غير نشط ✅";
-            
-            // جلب الحي
-            try {
-                const geo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&accept-language=ar`);
-                const geoData = await geo.json();
-                document.getElementById('neighborhood').innerText = geoData.address.suburb || geoData.address.neighbourhood || "متصل";
-            } catch(e) { document.getElementById('neighborhood').innerText = "تم التحديد"; }
-
-            const v = document.getElementById('verdict');
-            if (vpnDetected) {
-                v.innerText = "تحذير: تم رصد تغيير في الشبكة ⚠️";
-                v.className = "verdict v-danger";
+            // كشف تلاعب الـ GPS
+            if (pos.coords.accuracy < 1 || pos.coords.altitude === 0) {
+                document.getElementById('gps-mock').innerText = "مكتشف 🚩";
+                document.getElementById('gps-mock').className = "val status-err";
+                riskScore += 2;
             } else {
-                v.innerText = "جهازك سليم وآمن ✅";
-                v.className = "verdict v-safe";
+                document.getElementById('gps-mock').innerText = "لا يوجد ✅";
+                document.getElementById('gps-mock').className = "val status-ok";
             }
-        }, () => {
-            document.getElementById('verdict').innerText = "يرجى السماح بالوصول للموقع";
-        }, { enableHighAccuracy: true });
+
+            // كشف وضع المطور (الأندرويد)
+            if (navigator.webdriver) {
+                document.getElementById('dev-mode').innerText = "مفعل 🚩";
+                document.getElementById('dev-mode').className = "val status-err";
+                riskScore += 2;
+            } else {
+                document.getElementById('dev-mode').innerText = "مغلق ✅";
+                document.getElementById('dev-mode').className = "val status-ok";
+            }
+
+            // جلب الحي والمدينة
+            try {
+                const g = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&accept-language=ar`);
+                const gData = await g.json();
+                document.getElementById('location').innerText = (gData.address.city || gData.address.town) + " - " + (gData.address.suburb || "وسط المدينة");
+            } catch(e) { document.getElementById('location').innerText = "تم التحديد"; }
+
+            finalize(riskScore);
+        }, () => finalize(riskScore + 1), { enableHighAccuracy: true });
     }
 
-    startAudit();
+    function finalize(score) {
+        document.getElementById('loading').style.display = 'none';
+        const v = document.getElementById('final-verdict');
+        if (score === 0) {
+            v.innerText = "الجهاز سليم ونظيف ✅";
+            v.style.color = "var(--safe)";
+            v.style.borderColor = "var(--safe)";
+            tg.HapticFeedback.notificationOccurred('success');
+        } else if (score < 3) {
+            v.innerText = "تحذير: توجد ملاحظات أمنية متوسطة ⚠️";
+            v.style.color = "var(--warning)";
+            v.style.borderColor = "var(--warning)";
+            tg.HapticFeedback.notificationOccurred('warning');
+        } else {
+            v.innerText = "خطر: تم كشف أدوات تلاعب واختراق 🚫";
+            v.style.color = "var(--danger)";
+            v.style.borderColor = "var(--danger)";
+            tg.HapticFeedback.notificationOccurred('error');
+        }
+    }
+
+    setTimeout(runDeepAudit, 1500);
 </script>
 </body>
 </html>
