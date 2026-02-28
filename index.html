@@ -3,159 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الفحص الأمني المتقدم</title>
+    <title>الرادار الأمني المتقدم</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { 
-            background: #0a0a0a; 
-            color: #ffffff; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            text-align: center; 
-            padding: 20px;
-            margin: 0;
-        }
-        .container { max-width: 400px; margin: auto; }
+        :root { --primary: #00d1ff; --bg: #050505; --card: #121212; --danger: #ff4d4d; --safe: #00ff88; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding: 15px; overflow-x: hidden; }
+        .header { margin: 20px 0; text-align: center; }
+        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 50px; font-size: 12px; background: #222; border: 1px solid #333; margin-bottom: 10px; }
         
-        /* تأثير التحميل */
-        .loader-box { margin: 50px auto; }
-        .spinner {
-            width: 60px; height: 60px;
-            border: 5px solid #222;
-            border-top: 5px solid #0088cc;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* شاشة التحميل الذكية */
+        #loader { text-align: center; padding: 50px 0; }
+        .radar { width: 100px; height: 100px; border: 2px solid var(--primary); border-radius: 50%; margin: 0 auto 20px; position: relative; border-left-color: transparent; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        .card {
-            background: #161616;
-            border: 1px solid #333;
-            border-radius: 20px;
-            padding: 20px;
-            margin-top: 20px;
-            display: none; /* مخفي حتى ينتهي التحميل */
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
+        /* جدول البيانات الأمني */
+        .report-card { background: var(--card); border-radius: 15px; padding: 20px; display: none; border: 1px solid #222; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        .row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #1f1f1f; font-size: 14px; }
+        .row:last-child { border: none; }
+        .label { color: #888; }
+        .val { font-weight: bold; color: #ddd; }
         
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #222;
-        }
-        .info-item:last-child { border: none; }
+        .verdict-box { margin-top: 20px; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 18px; }
+        .v-safe { background: rgba(0,255,136,0.1); color: var(--safe); border: 1px solid var(--safe); }
+        .v-danger { background: rgba(255,77,77,0.1); color: var(--danger); border: 1px solid var(--danger); }
         
-        .label { color: #888; font-size: 0.9rem; }
-        .value { font-weight: bold; }
-        
-        .safe { color: #00ff88; }
-        .danger { color: #ff4444; }
-
-        h2 { margin-top: 20px; font-size: 1.5rem; }
-        .btn-retry {
-            background: #0088cc;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            cursor: pointer;
-            display: none;
-        }
+        .pulse { animation: pulse-red 1s infinite; }
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div id="loading-screen" class="loader-box">
-        <div class="spinner"></div>
-        <h3 id="load-text">جاري الاتصال بالقمر الصناعي...</h3>
-        <p id="percent">0%</p>
-    </div>
+<div class="header">
+    <div class="status-badge">نظام الفحص النسخة 2.0 (احترافي)</div>
+    <h2 id="main-title">جاري تحليل الجهاز...</h2>
+</div>
 
-    <div id="result-card" class="card">
-        <h3 style="margin-top:0; color:#0088cc;">تقرير الفحص الأمني</h3>
-        
-        <div class="info-item">
-            <span class="label">نوع الجهاز:</span>
-            <span id="device" class="value">..</span>
-        </div>
-        <div class="info-item">
-            <span class="label">نظام التشغيل:</span>
-            <span id="os" class="value">..</span>
-        </div>
-        <div class="info-item">
-            <span class="label">برامج التلاعب:</span>
-            <span id="mock-status" class="value">..</span>
-        </div>
-        
-        <h2 id="verdict">جاري التحقق..</h2>
-        <button id="retry-btn" class="btn-retry" onclick="location.reload()">إعادة المحاولة</button>
-    </div>
+<div id="loader">
+    <div class="radar"></div>
+    <p id="step">جاري فحص بروتوكولات الشبكة...</p>
+</div>
+
+<div id="report" class="report-card">
+    <div class="row"><span class="label">مزود الخدمة (ISP):</span><span id="isp" class="val">جاري الجلب...</span></div>
+    <div class="row"><span class="label">موقع الشبكة (IP):</span><span id="ip-loc" class="val">..</span></div>
+    <div class="row"><span class="label">تطابق المنطقة الزمنية:</span><span id="tz-check" class="val">..</span></div>
+    <div class="row"><span class="label">تذبذب الـ GPS:</span><span id="gps-jitter" class="val">..</span></div>
+    <div class="row"><span class="label">بيئة التشغيل:</span><span id="env-status" class="val">أصلية ✅</span></div>
+    <div class="row"><span class="label">نسبة البطارية:</span><span id="batt" class="val">..</span></div>
+
+    <div id="verdict" class="verdict-box">تحليل النتائج النهائي...</div>
+    <button onclick="location.reload()" style="background:none; border:1px solid #333; color:#888; margin-top:15px; width:100%; padding:10px; border-radius:8px;">إعادة الفحص</button>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
-    tg.expand(); // توسيع الواجهة لتشغل الشاشة كاملة
+    tg.expand();
 
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        progress += Math.floor(Math.random() * 15) + 1;
-        if (progress >= 100) {
-            progress = 100;
-            clearInterval(progressInterval);
-            startLocationCheck();
+    async function runAdvancedCheck() {
+        let issues = 0;
+        
+        try {
+            // 1. جلب بيانات الـ IP والـ VPN المبدئية
+            const ipRes = await fetch('https://ipapi.co/json/');
+            const ipData = await ipRes.json();
+            document.getElementById('isp').innerText = ipData.org;
+            document.getElementById('ip-loc').innerText = ipData.country_name + " - " + ipData.city;
+
+            // 2. فحص المنطقة الزمنية (كشف الـ VPN)
+            const localTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if(!localTZ.includes(ipData.timezone.split('/')[1])) {
+                document.getElementById('tz-check').innerText = "غير متطابق 🚩";
+                document.getElementById('tz-check').style.color = "var(--danger)";
+                issues++;
+            } else {
+                document.getElementById('tz-check').innerText = "متطابق ✅";
+            }
+
+            // 3. فحص البطارية (إضافة مصداقية)
+            if (navigator.getBattery) {
+                const b = await navigator.getBattery();
+                document.getElementById('batt').innerText = Math.round(b.level * 100) + "%";
+            }
+
+            // 4. فحص الـ GPS العميق
+            navigator.geolocation.getCurrentPosition(pos => {
+                const acc = pos.coords.accuracy;
+                const alt = pos.coords.altitude;
+                
+                // كشف الـ Fake GPS (إذا كانت الدقة مثالية جداً أو الارتفاع صفر/مفقود)
+                if(acc < 1 || alt === 0 || alt === null) {
+                    document.getElementById('gps-jitter').innerText = "ثابت (مشبوه) 🚩";
+                    document.getElementById('gps-jitter').style.color = "var(--danger)";
+                    issues += 2;
+                } else {
+                    document.getElementById('gps-jitter').innerText = "طبيعي ✅";
+                }
+
+                // كشف المتصفحات الوهمية والمتاجر الخارجية
+                if(navigator.webdriver || !/iPhone|iPad|Android/i.test(navigator.userAgent)) {
+                    document.getElementById('env-status').innerText = "بيئة معدلة 🚩";
+                    issues += 2;
+                }
+
+                finalize(issues);
+            }, () => {
+                document.getElementById('verdict').innerText = "خطأ: يجب السماح بالموقع للفحص الدقيق";
+                document.getElementById('verdict').className = "verdict-box v-danger";
+            }, {enableHighAccuracy: true});
+
+        } catch (e) {
+            console.log(e);
         }
-        document.getElementById('percent').innerText = progress + "%";
-    }, 150);
+    }
 
-    function startLocationCheck() {
-        // فحص نوع الجهاز
-        const ua = navigator.userAgent;
-        document.getElementById('device').innerText = /iPhone|iPad/i.test(ua) ? "iPhone" : "Android";
-        document.getElementById('os').innerText = navigator.platform;
-
-        // إظهار الكارت وإخفاء التحميل
-        document.getElementById('loading-screen').style.display = 'none';
-        document.getElementById('result-card').style.display = 'block';
-
-        // طلب إذن الموقع
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const accuracy = position.coords.accuracy;
-                    // كشف التلاعب: إذا كانت الدقة 0 أو مشبوهة جداً
-                    const isMocked = position.coords.accuracy <= 0 || navigator.webdriver;
-
-                    if (isMocked) {
-                        setResult("مكتشف 🚩", "مشبوه 🚫", "danger");
-                        tg.HapticFeedback.notificationOccurred('error');
-                    } else {
-                        setResult("لا يوجد ✅", "سليم ✅", "safe");
-                        tg.HapticFeedback.notificationOccurred('success');
-                    }
-                },
-                (error) => {
-                    document.getElementById('verdict').innerText = "يرجى منح صلاحية الموقع";
-                    document.getElementById('verdict').className = "danger";
-                    document.getElementById('retry-btn').style.display = "inline-block";
-                    tg.HapticFeedback.notificationOccurred('warning');
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
+    function finalize(issues) {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('report').style.display = 'block';
+        document.getElementById('main-title').innerText = "تقرير الفحص الأمني";
+        
+        const v = document.getElementById('verdict');
+        if(issues === 0) {
+            v.innerText = "الجهاز سليم وآمن ✅";
+            v.className = "verdict-box v-safe";
+            tg.HapticFeedback.notificationOccurred('success');
+        } else if(issues < 3) {
+            v.innerText = "تحذير: تم رصد أنشطة مشبوهة (VPN?) ⚠️";
+            v.className = "verdict-box v-danger";
+            tg.HapticFeedback.notificationOccurred('warning');
         } else {
-            document.getElementById('verdict').innerText = "متصفحك لا يدعم الفحص";
+            v.innerText = "خطر: تلاعب بالنظام ومواقع وهمية 🚫";
+            v.className = "verdict-box v-danger pulse";
+            tg.HapticFeedback.notificationOccurred('error');
         }
     }
 
-    function setResult(mockText, verdictText, className) {
-        document.getElementById('mock-status').innerText = mockText;
-        document.getElementById('mock-status').className = "value " + className;
-        document.getElementById('verdict').innerText = verdictText;
-        document.getElementById('verdict').className = className;
-    }
+    setTimeout(runAdvancedCheck, 2000); // محاكاة فحص لمدة ثانيتين
 </script>
-
 </body>
 </html>
