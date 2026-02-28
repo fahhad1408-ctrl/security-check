@@ -3,36 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>رادار الحماية الشامل</title>
+    <title>رادار الحماية الاحترافي</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --primary: #00d1ff; --bg: #050505; --card: #111; --danger: #ff4d4d; --safe: #00ff88; --warning: #ffcc00; }
+        :root { --primary: #00d1ff; --bg: #050505; --card: #121212; --danger: #ff4d4d; --safe: #00ff88; --warning: #ffcc00; }
         body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; }
-        .report { background: var(--card); border-radius: 15px; padding: 15px; border: 1px solid #222; margin-top: 20px; }
-        .item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #222; font-size: 13px; }
-        .val { color: var(--primary); font-weight: bold; text-align: left; }
-        .verdict { margin-top: 20px; padding: 15px; border-radius: 12px; text-align: center; font-weight: bold; border: 1px solid #333; }
         #start-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; text-align: center; }
-        .btn { background: var(--primary); color: #000; border: none; padding: 15px 40px; border-radius: 50px; font-weight: bold; font-size: 18px; }
+        .btn { background: var(--primary); color: #000; border: none; padding: 16px 45px; border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer; }
+        .report { background: var(--card); border-radius: 15px; padding: 15px; border: 1px solid #222; margin-top: 10px; display: none; }
+        .item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #1f1f1f; font-size: 13px; }
+        .val { color: var(--primary); font-weight: bold; }
+        .verdict { margin-top: 20px; padding: 15px; border-radius: 12px; text-align: center; font-weight: bold; border: 1px solid #333; }
+        .loader { width: 50px; height: 50px; border: 3px solid #222; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; display: none; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
 <div id="start-screen">
-    <h2 style="margin-bottom: 20px;">🛡️ نظام الفحص الجنائي</h2>
-    <button class="btn" onclick="startDeepAudit()">ابدأ الفحص الآن</button>
+    <div style="font-size: 60px; margin-bottom: 10px;">🛡️</div>
+    <h2>نظام الفحص الأمني V4.0</h2>
+    <p style="color: #666; margin-bottom: 30px;">اضغط للبدء في تحليل بروتوكولات الجهاز والشبكة</p>
+    <button class="btn" onclick="runAudit()">ابدأ الفحص الآن</button>
 </div>
 
-<div id="main-content" style="display:none;">
-    <h3 style="text-align:center;">تقرير أمن الجهاز والشبكة</h3>
-    <div class="report">
-        <div class="item"><span>نوع الجهاز:</span><span id="device" class="val">..</span></div>
-        <div class="item"><span>الدولة (الشبكة):</span><span id="country" class="val">جاري الجلب..</span></div>
-        <div class="item"><span>مزود الخدمة:</span><span id="isp" class="val">..</span></div>
-        <div class="item"><span>الموقع الحقيقي (GPS):</span><span id="location" class="val">..</span></div>
-        <div class="item"><span>كشف الـ VPN:</span><span id="vpn" class="val">..</span></div>
-        <div class="item"><span>وضع المطور:</span><span id="dev" class="val">..</span></div>
-        <div id="verdict" class="verdict">جاري التحليل...</div>
+<div id="main-ui" style="display:none;">
+    <h3 id="status-text" style="text-align:center;">جاري تحليل البيانات...</h3>
+    <div id="loading" class="loader"></div>
+
+    <div id="report" class="report">
+        <div style="color:#555; font-size:11px; margin-bottom:10px;">تفاصيل الفحص الجنائي:</div>
+        <div class="item"><span>نوع الجهاز:</span><span id="d_type" class="val">..</span></div>
+        <div class="item"><span>الدولة (الشبكة):</span><span id="d_country" class="val">..</span></div>
+        <div class="item"><span>مزود الخدمة:</span><span id="d_isp" class="val">..</span></div>
+        <div class="item"><span>الموقع (GPS):</span><span id="d_loc" class="val">..</span></div>
+        <div class="item"><span>كشف الـ VPN:</span><span id="d_vpn" class="val">..</span></div>
+        <div class="item"><span>وضع المطور:</span><span id="d_dev" class="val">..</span></div>
+        
+        <div id="verdict-box" class="verdict">جاري إصدار الحكم...</div>
+        <button onclick="location.reload()" style="width:100%; padding:12px; margin-top:15px; background:none; border:1px solid #333; color:#555; border-radius:10px;">إعادة فحص</button>
     </div>
 </div>
 
@@ -40,57 +49,75 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    async function startDeepAudit() {
+    async function runAudit() {
         document.getElementById('start-screen').style.display = 'none';
-        document.getElementById('main-content').style.display = 'block';
-        tg.HapticFeedback.impactOccurred('medium');
+        document.getElementById('main-ui').style.display = 'block';
+        document.getElementById('loading').style.display = 'block';
+        tg.HapticFeedback.impactOccurred('heavy');
 
-        let risk = 0;
-        let vpnFlag = false;
+        let riskScore = 0;
+        let vpnDetected = false;
 
-        // 1. جلب بيانات الشبكة (باستخدام سيرفرين لضمان النتيجة)
+        // 1. جلب بيانات الشبكة (نظام السيرفرات المتعددة)
         try {
-            const res = await fetch('https://ipapi.co/json/').catch(() => fetch('https://ipinfo.io/json?token=7ba0a7c473729e'));
-            const data = await res.json();
-            document.getElementById('country').innerText = data.country_name || data.country;
-            document.getElementById('isp').innerText = data.org || "مخفي";
-            
-            // فحص الـ VPN (توقيت السعودية GMT+3 هو -180)
-            const offset = new Date().getTimezoneOffset();
-            if (offset !== -180 || (data.country_code !== 'SA' && data.country !== 'SA')) {
-                vpnFlag = true;
-                risk += 2;
+            const apiUrls = ['https://ipapi.co/json/', 'https://ipinfo.io/json?token=7ba0a7c473729e'];
+            let data = null;
+            for(let url of apiUrls) {
+                try {
+                    const res = await fetch(url);
+                    data = await res.json();
+                    if(data.country_name || data.country) break;
+                } catch(e) {}
             }
-        } catch(e) { risk += 0.5; }
 
-        // 2. فحص الـ GPS والحي
+            if(data) {
+                document.getElementById('d_country').innerText = data.country_name || data.country;
+                document.getElementById('d_isp').innerText = (data.org || data.company || "شركة خاصة").split(' ').slice(0,2).join(' ');
+                
+                const offset = new Date().getTimezoneOffset();
+                if(offset !== -180 || (data.country_code !== 'SA' && data.country !== 'SA')) {
+                    vpnDetected = true;
+                    riskScore += 2;
+                }
+            }
+        } catch(e) { riskScore += 0.5; }
+
+        // 2. فحص الـ GPS والحساسات
         navigator.geolocation.getCurrentPosition(async (pos) => {
-            const coords = pos.coords;
-            document.getElementById('vpn').innerText = vpnFlag ? "نشط 🚩" : "غير نشط ✅";
-            
+            document.getElementById('d_vpn').innerText = vpnDetected ? "نشط 🚩" : "غير نشط ✅";
+            document.getElementById('d_type').innerText = /iPhone|iPad/i.test(navigator.userAgent) ? "Apple iPhone" : "Android Device";
+            document.getElementById('d_dev').innerText = navigator.webdriver ? "مفعل 🚩" : "مغلق ✅";
+            if(navigator.webdriver) riskScore += 2;
+
             try {
-                const geo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.latitude}&lon=${coords.longitude}&accept-language=ar`);
+                const geo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&accept-language=ar`);
                 const gData = await geo.json();
-                document.getElementById('location').innerText = gData.address.suburb || gData.address.city || "تم التحديد";
-            } catch(e) {}
+                document.getElementById('d_loc').innerText = gData.address.suburb || gData.address.city || "داخل النطاق";
+            } catch(e) { document.getElementById('d_loc').innerText = "تم التحديد"; }
 
-            // 3. وضع المطور وهُوية الجهاز
-            document.getElementById('device').innerText = /iPhone|iPad/i.test(navigator.userAgent) ? "Apple iPhone" : "Android Device";
-            document.getElementById('dev').innerText = navigator.webdriver ? "مفعل 🚩" : "مغلق ✅";
-            if(navigator.webdriver) risk += 2;
+            finish(riskScore);
+        }, () => finish(riskScore + 3), { enableHighAccuracy: true });
+    }
 
-            // النتيجة النهائية
-            const v = document.getElementById('verdict');
-            if (risk < 2) {
-                v.innerText = "الجهاز سليم وآمن ✅";
-                v.style.borderColor = "#00ff88"; v.style.color = "#00ff88";
-            } else {
-                v.innerText = "تحذير: تم رصد أنشطة مشبوهة ⚠️";
-                v.style.borderColor = "#ff4d4d"; v.style.color = "#ff4d4d";
-            }
-        }, () => {
-            document.getElementById('verdict').innerText = "خطأ: يجب السماح للموقع للفحص";
-        }, { enableHighAccuracy: true });
+    function finish(score) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('report').style.display = 'block';
+        document.getElementById('status-text').innerText = "التقرير الأمني النهائي";
+        
+        const box = document.getElementById('verdict-box');
+        if(score === 0) {
+            box.innerText = "الجهاز سليم تماماً ✅";
+            box.style.color = "var(--safe)"; box.style.borderColor = "var(--safe)";
+            tg.HapticFeedback.notificationOccurred('success');
+        } else if(score < 3) {
+            box.innerText = "تحذير: ملاحظات أمنية متوسطة ⚠️";
+            box.style.color = "var(--warning)"; box.style.borderColor = "var(--warning)";
+            tg.HapticFeedback.notificationOccurred('warning');
+        } else {
+            box.innerText = "خطر: تم كشف أدوات تلاعب 🚫";
+            box.style.color = "var(--danger)"; box.style.borderColor = "var(--danger)";
+            tg.HapticFeedback.notificationOccurred('error');
+        }
     }
 </script>
 </body>
