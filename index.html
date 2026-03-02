@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الفحص الجنائي V5.0</title>
+    <title>فحص الموقع الحقيقي V6.0</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --primary: #00d1ff; --bg: #050505; --card: #121212; --danger: #ff4d4d; --safe: #00ff88; --warning: #ffcc00; }
-        body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; overflow-x: hidden; }
+        body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; }
         #start-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; text-align: center; }
-        .btn { background: var(--primary); color: #000; border: none; padding: 18px 50px; border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 0 20px rgba(0,209,255,0.3); }
+        .btn { background: var(--primary); color: #000; border: none; padding: 18px 50px; border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer; }
         .report { background: var(--card); border-radius: 20px; padding: 20px; border: 1px solid #222; margin-top: 10px; display: none; }
-        .section-title { color: #555; font-size: 11px; margin: 15px 0 8px; border-bottom: 1px solid #222; padding-bottom: 5px; text-transform: uppercase; }
+        .section-title { color: #555; font-size: 11px; margin: 15px 0 8px; border-bottom: 1px solid #222; padding-bottom: 5px; }
         .item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1a1a1a; font-size: 13px; }
         .val { color: var(--primary); font-weight: bold; text-align: left; }
-        .verdict { margin-top: 25px; padding: 18px; border-radius: 15px; text-align: center; font-weight: bold; border: 2px solid #333; font-size: 16px; }
+        .verdict { margin-top: 25px; padding: 18px; border-radius: 15px; text-align: center; font-weight: bold; border: 2px solid #333; }
         .loader { width: 50px; height: 50px; border: 3px solid #222; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 30px auto; display: none; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
@@ -22,34 +22,32 @@
 <body>
 
 <div id="start-screen">
-    <div style="font-size: 70px; margin-bottom: 20px;">🛡️</div>
-    <h2 style="letter-spacing: 1px;">رادار الحماية الشامل</h2>
-    <p style="color: #666; margin-bottom: 40px; font-size: 14px;">نظام كشف التلاعب والتحقق من هوية الجهاز</p>
-    <button class="btn" onclick="initiateDeepAudit()">ابدأ الفحص الجنائي</button>
+    <div style="font-size: 70px; margin-bottom: 20px;">📍</div>
+    <h2>نظام كشف الموقع الحقيقي</h2>
+    <p style="color: #666; margin-bottom: 40px;">سيتم تحديد موقعك الفعلي بدقة وتجاوز أي تلاعب بالشبكة</p>
+    <button class="btn" onclick="startAudit()">ابدأ الفحص الآن</button>
 </div>
 
 <div id="main-ui" style="display:none;">
-    <h3 id="status-text" style="text-align:center; color: var(--primary);">جاري تحليل البروتوكولات...</h3>
+    <h3 id="status-text" style="text-align:center; color: var(--primary);">جاري جلب الإحداثيات...</h3>
     <div id="loading" class="loader"></div>
 
     <div id="report" class="report">
-        <div class="section-title">بيانات النظام والجهاز</div>
+        <div class="section-title">بيانات الجهاز</div>
         <div class="item"><span>نوع الجوال:</span><span id="d_model" class="val">..</span></div>
         <div class="item"><span>نظام التشغيل:</span><span id="d_os" class="val">..</span></div>
-        <div class="item"><span>بيئة التشغيل:</span><span id="d_env" class="val">..</span></div>
 
-        <div class="section-title">تحليل الشبكة والموقع</div>
-        <div class="item"><span>دولة الشبكة:</span><span id="d_country" class="val">..</span></div>
-        <div class="item"><span>مزود الخدمة (ISP):</span><span id="d_isp" class="val">..</span></div>
-        <div class="item"><span>الموقع الفعلي:</span><span id="d_loc" class="val">..</span></div>
+        <div class="section-title">الموقع الجغرافي الفعلي</div>
+        <div class="item"><span>المدينة/الحي:</span><span id="d_loc" class="val">جاري التحديد..</span></div>
+        <div class="item"><span>الدولة (GPS):</span><span id="d_gps_country" class="val">..</span></div>
+        <div class="item"><span>إحداثيات دقيقة:</span><span id="d_coords" class="val" style="font-size:10px;">..</span></div>
 
-        <div class="section-title">مؤشرات الأمان</div>
+        <div class="section-title">تحليل الشبكة (IP)</div>
+        <div class="item"><span>دولة الإنترنت:</span><span id="d_net_country" class="val">..</span></div>
         <div class="item"><span>حالة الـ VPN:</span><span id="d_vpn" class="val">..</span></div>
-        <div class="item"><span>وضع المطور:</span><span id="d_dev" class="val">..</span></div>
-        <div class="item"><span>تلاعب بالـ GPS:</span><span id="d_fake" class="val">..</span></div>
         
         <div id="verdict-box" class="verdict">جاري إصدار التقرير...</div>
-        <button onclick="location.reload()" style="width:100%; padding:14px; margin-top:20px; background:#1a1a1a; border:1px solid #333; color:#888; border-radius:12px; font-size:12px;">إعادة فحص الجهاز</button>
+        <button onclick="location.reload()" style="width:100%; padding:14px; margin-top:20px; background:#1a1a1a; border:1px solid #333; color:#888; border-radius:12px;">إعادة فحص</button>
     </div>
 </div>
 
@@ -57,93 +55,75 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    async function initiateDeepAudit() {
+    async function startAudit() {
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('main-ui').style.display = 'block';
         document.getElementById('loading').style.display = 'block';
         tg.HapticFeedback.impactOccurred('heavy');
 
-        let risk = 0;
-        let vpnActive = false;
-        const ua = navigator.userAgent;
+        let riskScore = 0;
+        let vpnFlag = false;
 
-        // 1. فحص الجهاز والنظام
-        document.getElementById('d_model').innerText = /iPhone|iPad/i.test(ua) ? "Apple iPhone" : /Android/i.test(ua) ? "Android Device" : "PC/Emulator";
-        document.getElementById('d_os').innerText = navigator.platform;
-        
-        // كشف المحاكي (عبر نقاط اللمس)
-        if (navigator.maxTouchPoints === 0) {
-            document.getElementById('d_env').innerText = "بيئة افتراضية/PC 🚩";
-            risk += 3;
-        } else {
-            document.getElementById('d_env').innerText = "جوال حقيقي ✅";
-        }
-
-        // 2. جلب الشبكة (نظام Fallback المتعدد)
-        const apis = ['https://ipapi.co/json/', 'https://ipinfo.io/json?token=7ba0a7c473729e', 'https://extreme-ip-lookup.com/json/?key=demo'];
-        let netData = null;
-        for (let url of apis) {
-            try {
-                const res = await fetch(url);
-                netData = await res.json();
-                if (netData.country || netData.country_name) break;
-            } catch(e) {}
-        }
-
-        if (netData) {
-            document.getElementById('d_country').innerText = netData.country_name || netData.country;
-            document.getElementById('d_isp').innerText = (netData.org || netData.businessName || "اتصال خاص").split(' ')[0];
+        // 1. جلب بيانات الشبكة (IP)
+        try {
+            const res = await fetch('https://ipapi.co/json/');
+            const net = await res.json();
+            document.getElementById('d_net_country').innerText = net.country_name || "..";
             
-            // كشف VPN عبر التوقيت والدولة
+            // تحقق مبدئي من الـ VPN
             const offset = new Date().getTimezoneOffset();
-            if (offset !== -180 || (netData.country_code !== 'SA' && netData.country !== 'SA')) {
-                vpnActive = true;
-                risk += 2;
+            if (offset !== -180 || (net.country_code !== 'SA' && net.country !== 'SA')) {
+                vpnFlag = true;
             }
-        }
+        } catch(e) {}
 
-        // 3. فحص الـ GPS والحساسات
+        // 2. الفحص الجوهري (GPS)
         navigator.geolocation.getCurrentPosition(async (pos) => {
-            document.getElementById('d_vpn').innerText = vpnActive ? "نشط (تلاعب) 🚩" : "غير نشط ✅";
-            document.getElementById('d_dev').innerText = navigator.webdriver ? "مفعل 🚩" : "مغلق ✅";
-            if(navigator.webdriver) risk += 2;
-
-            // كشف Fake GPS (دقة مريبة)
-            if (pos.coords.accuracy < 1) {
-                document.getElementById('d_fake').innerText = "مكتشف 🚩";
-                risk += 3;
-            } else {
-                document.getElementById('d_fake').innerText = "لا يوجد ✅";
-            }
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            document.getElementById('d_coords').innerText = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+            document.getElementById('d_model').innerText = /iPhone|iPad/i.test(navigator.userAgent) ? "Apple iPhone" : "Android Device";
+            document.getElementById('d_os').innerText = navigator.platform;
 
             try {
-                const g = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&accept-language=ar`);
+                // جلب العنوان التفصيلي
+                const g = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=ar`);
                 const gData = await g.json();
-                document.getElementById('d_loc').innerText = (gData.address.suburb || gData.address.city || "داخل النطاق");
-            } catch(e) { document.getElementById('d_loc').innerText = "تم التحديد"; }
+                const address = gData.address;
+                
+                document.getElementById('d_loc').innerText = `${address.suburb || address.neighbourhood || ""} - ${address.city || address.town || ""}`;
+                document.getElementById('d_gps_country').innerText = address.country || "..";
 
-            finalize(risk);
-        }, () => finalize(risk + 5), { enableHighAccuracy: true });
+                // منطق الحكم الذكي: إذا كان الـ GPS في السعودية، تجاهل شكوك الـ VPN
+                if (address.country_code === 'sa' || address.country === 'السعودية') {
+                    document.getElementById('d_vpn').innerText = "غير نشط ✅";
+                    riskScore = 0;
+                } else if (vpnFlag) {
+                    document.getElementById('d_vpn').innerText = "نشط (تلاعب) 🚩";
+                    riskScore = 3;
+                }
+            } catch(e) {
+                document.getElementById('d_loc').innerText = "تم تحديد الإحداثيات";
+            }
+
+            finalize(riskScore);
+        }, () => finalize(5), { enableHighAccuracy: true });
     }
 
     function finalize(score) {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('report').style.display = 'block';
-        document.getElementById('status-text').innerText = "تقرير الفحص الجنائي النهائي";
+        document.getElementById('status-text').innerText = "تقرير الموقع والأمان النهائي";
         
         const b = document.getElementById('verdict-box');
         if (score === 0) {
-            b.innerText = "الجهاز سليم وآمن بالكامل ✅";
+            b.innerText = "الجهاز سليم والموقع حقيقي ✅";
             b.style.color = "var(--safe)"; b.style.borderColor = "var(--safe)";
             tg.HapticFeedback.notificationOccurred('success');
-        } else if (score < 4) {
-            b.innerText = "تحذير: تم رصد محاولة تلاعب بالشبكة ⚠️";
+        } else {
+            b.innerText = "تحذير: تم رصد تناقض في البيانات الجغرافية ⚠️";
             b.style.color = "var(--warning)"; b.style.borderColor = "var(--warning)";
             tg.HapticFeedback.notificationOccurred('warning');
-        } else {
-            b.innerText = "خطر: بيئة تشغيل مشبوهة أو وهمية 🚫";
-            b.style.color = "var(--danger)"; b.style.borderColor = "var(--danger)";
-            tg.HapticFeedback.notificationOccurred('error');
         }
     }
 </script>
