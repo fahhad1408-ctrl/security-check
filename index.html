@@ -3,37 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Shield Pro - V9.0</title>
+    <title>Cyber Shield Pro - Ultimate</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --safe: #00f2fe; --safe-bg: #00f2fe22; --warn: #fbc2eb; --warn-bg: #fbc2eb22; --danger: #ff0844; --danger-bg: #ff084422; --bg: #030712; --card: #111827; }
-        body { background: var(--bg); color: #f3f4f6; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 20px; line-height: 1.6; }
-        .container { max-width: 500px; margin: 0 auto; }
+        :root { 
+            --safe: #00ff88; --safe-glow: rgba(0, 255, 136, 0.3);
+            --warn: #ffcc00; --warn-glow: rgba(255, 204, 0, 0.3);
+            --danger: #ff0055; --danger-glow: rgba(255, 0, 85, 0.3);
+            --bg: #020617; --card: #1e293b; --accent: #38bdf8;
+        }
         
-        /* شاشة البداية */
-        #welcome-screen { text-align: center; padding-top: 80px; }
-        .shield-icon { font-size: 80px; margin-bottom: 20px; filter: drop-shadow(0 0 20px var(--safe)); animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        .main-btn { background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #000; border: none; padding: 18px 40px; border-radius: 50px; font-weight: 800; font-size: 18px; cursor: pointer; transition: 0.3s; width: 100%; box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4); }
-        
-        /* تقرير الفحص */
+        body { background: var(--bg); color: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 20px; overflow-x: hidden; }
+        .container { max-width: 450px; margin: 0 auto; }
+
+        /* شاشة الترحيب */
+        #welcome-screen { text-align: center; padding-top: 60px; transition: 0.5s; }
+        .radar { position: relative; width: 120px; height: 120px; margin: 0 auto 30px; border: 2px solid var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 50px; }
+        .radar::after { content: ''; position: absolute; width: 100%; height: 100%; border: 2px solid var(--accent); border-radius: 50%; animation: ripple 2s linear infinite; }
+        @keyframes ripple { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
+
+        .main-btn { 
+            background: linear-gradient(45deg, #0ea5e9, #2563eb); color: white; border: none; 
+            padding: 20px 45px; border-radius: 15px; font-weight: 800; font-size: 18px; 
+            cursor: pointer; width: 100%; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+            transition: 0.3s;
+        }
+        .main-btn:active { transform: scale(0.95); }
+
+        /* واجهة النتائج */
         #audit-ui { display: none; }
-        .card { background: var(--card); border-radius: 20px; padding: 20px; border: 1px solid #1f2937; margin-bottom: 15px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .header-title { text-align: center; color: #9ca3af; font-size: 14px; margin-bottom: 20px; letter-spacing: 2px; }
-        .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #1f2937; }
+        .audit-header { text-align: center; margin-bottom: 25px; }
+        .audit-header h2 { margin: 0; color: var(--accent); letter-spacing: 1px; }
+
+        .card { 
+            background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px);
+            border-radius: 20px; padding: 18px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; 
+        }
+        .section-title { font-size: 11px; color: #64748b; margin-bottom: 10px; display: block; border-right: 3px solid var(--accent); padding-right: 8px; }
+        
+        .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .row:last-child { border: none; }
-        .label { color: #9ca3af; font-size: 12px; }
-        .value { color: #fff; font-weight: 600; font-size: 14px; text-align: left; }
-        
-        /* النتائج النهائية */
-        .verdict-area { margin-top: 30px; border-radius: 20px; padding: 25px; text-align: center; transition: 0.5s; border: 1px solid transparent; }
-        .v-safe { background: var(--safe-bg); border-color: var(--safe); color: var(--safe); }
-        .v-warn { background: var(--warn-bg); border-color: #ffcc00; color: #ffcc00; }
-        .v-danger { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
-        .status-msg { font-size: 20px; font-weight: 900; margin-bottom: 10px; display: block; }
-        .status-sub { font-size: 13px; opacity: 0.8; }
-        
-        .loader { width: 40px; height: 40px; border: 3px solid #1f2937; border-top-color: var(--safe); border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
+        .label { color: #94a3b8; font-size: 13px; }
+        .value { color: #fff; font-weight: 700; font-size: 13px; }
+
+        /* حالة النتيجة */
+        .verdict-card { 
+            padding: 25px; border-radius: 20px; text-align: center; 
+            margin-top: 25px; border: 2px solid transparent; transition: 0.8s;
+        }
+        .v-safe { border-color: var(--safe); background: var(--safe-glow); color: var(--safe); box-shadow: 0 0 20px var(--safe-glow); }
+        .v-warn { border-color: var(--warn); background: var(--warn-glow); color: var(--warn); box-shadow: 0 0 20px var(--warn-glow); }
+        .v-danger { border-color: var(--danger); background: var(--danger-bg); color: var(--danger); box-shadow: 0 0 20px var(--danger-glow); }
+
+        .loader { 
+            width: 40px; height: 40px; border: 4px solid #1e293b; border-top-color: var(--accent); 
+            border-radius: 50%; animation: spin 1s linear infinite; margin: 30px auto; 
+        }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -41,45 +66,46 @@
 
 <div class="container">
     <div id="welcome-screen">
-        <div class="shield-icon">🛡️</div>
-        <h1 style="margin-bottom: 10px;">Cyber Shield Pro</h1>
-        <p style="color: #9ca3af; margin-bottom: 40px;">نظام الفحص الجنائي المتطور للكشف عن الهوية والتلاعب</p>
-        <button class="main-btn" onclick="startDeepAudit()">بـدء الفـحص الآن</button>
+        <div class="radar">🛡️</div>
+        <h1 style="margin:0 0 10px">Cyber Shield V10</h1>
+        <p style="color: #64748b; margin-bottom: 40px;">نظام التحقيق الجنائي الرقمي المستقل</p>
+        <button class="main-btn" onclick="runAudit()">تفعيل الفحص الشامل</button>
     </div>
 
     <div id="audit-ui">
-        <div class="header-title">تقرير الحالة الأمنية الرقمية</div>
-        
-        <div id="loading-box" style="text-align: center; padding: 40px 0;">
-            <div class="loader"></div>
-            <p style="color: var(--safe);">جاري فحص بروتوكولات النظام والشبكة...</p>
+        <div class="audit-header">
+            <h2>تقرير التحقيق</h2>
+            <div id="loader" class="loader"></div>
         </div>
 
-        <div id="results-content" style="display: none;">
+        <div id="content" style="display:none">
             <div class="card">
-                <div class="row"><span class="label">الجهاز:</span><span id="res_device" class="value">..</span></div>
-                <div class="row"><span class="label">نظام التشغيل:</span><span id="res_os" class="value">..</span></div>
-                <div class="row"><span class="label">بيئة العمل:</span><span id="res_env" class="value">..</span></div>
+                <span class="section-title">بيانات العتاد والنظام</span>
+                <div class="row"><span class="label">هوية الجهاز:</span><span id="d_model" class="value">..</span></div>
+                <div class="row"><span class="label">نظام التشغيل:</span><span id="d_os" class="value">..</span></div>
+                <div class="row"><span class="label">البيئة:</span><span id="d_env" class="value">..</span></div>
             </div>
 
             <div class="card">
-                <div class="row"><span class="label">دولة الشبكة (IP):</span><span id="res_net_c" class="value">..</span></div>
-                <div class="row"><span class="label">مزود الخدمة:</span><span id="res_isp" class="val value">..</span></div>
-                <div class="row"><span class="label">الموقع (GPS):</span><span id="res_loc" class="value" style="color: #00f2fe;">..</span></div>
+                <span class="section-title">الموقع والشبكة</span>
+                <div class="row"><span class="label">دولة الـ IP:</span><span id="d_ip_c" class="value">..</span></div>
+                <div class="row"><span class="label">مزود الخدمة:</span><span id="d_isp" class="value">..</span></div>
+                <div class="row"><span class="label">موقعك الدقيق:</span><span id="d_loc" class="value" style="color:var(--accent)">..</span></div>
             </div>
 
             <div class="card">
-                <div class="row"><span class="label">تلاعب الـ VPN:</span><span id="res_vpn" class="value">..</span></div>
-                <div class="row"><span class="label">تلاعب الـ GPS:</span><span id="res_fake" class="value">..</span></div>
-                <div class="row"><span class="label">وضع المطور:</span><span id="res_dev" class="value">..</span></div>
+                <span class="section-title">تحليل المخاطر</span>
+                <div class="row"><span class="label">الـ VPN:</span><span id="d_vpn" class="value">..</span></div>
+                <div class="row"><span class="label">تلاعب الموقع:</span><span id="d_fake" class="value">..</span></div>
+                <div class="row"><span class="label">وضع المطور:</span><span id="d_dev" class="value">..</span></div>
             </div>
 
-            <div id="verdict_area" class="verdict-area">
-                <span id="status_msg" class="status-msg">..</span>
-                <span id="status_sub" class="status-sub">..</span>
+            <div id="v_card" class="verdict-card">
+                <div id="v_msg" style="font-size: 22px; font-weight: 900; margin-bottom: 5px;">فحص..</div>
+                <div id="v_sub" style="font-size: 13px; opacity: 0.9;">جاري استخراج النتيجة النهائية</div>
             </div>
-            
-            <button onclick="location.reload()" style="width:100%; padding:15px; margin-top:20px; background:none; border:1px solid #1f2937; color:#6b7280; border-radius:50px; font-size:12px;">إعادة تشغيل النظام</button>
+
+            <button onclick="location.reload()" style="width:100%; padding:15px; margin-top:20px; background:none; border:1px solid #334155; color:#64748b; border-radius:15px; cursor:pointer">إعادة تهيئة النظام</button>
         </div>
     </div>
 </div>
@@ -88,89 +114,84 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    async function startDeepAudit() {
+    async function runAudit() {
         document.getElementById('welcome-screen').style.display = 'none';
         document.getElementById('audit-ui').style.display = 'block';
         tg.HapticFeedback.impactOccurred('heavy');
 
-        let riskScore = 0;
-        let vpnAlert = false;
-        let gpsAlert = false;
+        let score = 0;
+        let vpn = false;
+        let fake = false;
 
-        // 1. تحديد الجهاز والنظام
+        // 1. الجهاز
         const ua = navigator.userAgent;
-        document.getElementById('res_device').innerText = /iPhone|iPad/i.test(ua) ? "Apple iPhone" : /Android/i.test(ua) ? "Android Device" : "Workstation/PC";
-        document.getElementById('res_os').innerText = navigator.platform;
-        document.getElementById('res_env').innerText = navigator.maxTouchPoints > 0 ? "جوال أصلي ✅" : "بيئة افتراضية 🚩";
-        if(navigator.maxTouchPoints === 0) riskScore += 5;
+        document.getElementById('d_model').innerText = /iPhone|iPad/i.test(ua) ? "Apple iPhone" : /Android/i.test(ua) ? "Android Device" : "Computer/PC";
+        document.getElementById('d_os').innerText = navigator.platform;
+        document.getElementById('d_env').innerText = navigator.maxTouchPoints > 0 ? "أصيلة ✅" : "وهمية 🚩";
+        if(navigator.maxTouchPoints === 0) score += 10;
 
-        // 2. جلب الشبكة (نظام السيرفرات المتعددة لضمان الظهور بدون VPN)
-        let netData = null;
-        const apiSources = ['https://ipwho.is/', 'https://ipapi.co/json/', 'https://extreme-ip-lookup.com/json/?key=demo'];
-        
-        for (let url of apiSources) {
-            try {
-                const res = await fetch(url);
-                netData = await res.json();
-                if(netData.country || netData.country_name) break;
-            } catch(e) {}
+        // 2. الشبكة (محاولات متعددة)
+        let net = null;
+        try {
+            const sources = ['https://ipwho.is/', 'https://ipapi.co/json/'];
+            for(let s of sources) {
+                const r = await fetch(s);
+                net = await r.json();
+                if(net.country) break;
+            }
+        } catch(e) {}
+
+        if(net) {
+            document.getElementById('d_ip_c').innerText = net.country || net.country_name;
+            document.getElementById('d_isp').innerText = (net.connection?.isp || net.org || "محلي").split(' ')[0];
+            if(!['SA', 'Saudi Arabia'].includes(net.country_code || net.country)) vpn = true;
         }
 
-        if(netData) {
-            document.getElementById('res_net_c').innerText = netData.country || netData.country_name;
-            document.getElementById('res_isp').innerText = (netData.connection?.isp || netData.org || "مزود خدمة محلي").split(' ')[0];
-            if(netData.country_code !== 'SA' && netData.country !== 'Saudi Arabia') vpnAlert = true;
-        }
-
-        // 3. جلب الـ GPS والمقارنة الجنائية
+        // 3. الموقع الصارم
         navigator.geolocation.getCurrentPosition(async (pos) => {
-            const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-            
-            // كشف تلاعب الـ GPS
-            if(pos.coords.accuracy <= 1 || pos.coords.accuracy === 10) { gpsAlert = true; riskScore += 5; }
+            const {latitude: lat, longitude: lon, accuracy: acc} = pos.coords;
+            if(acc <= 1 || acc === 10) { fake = true; score += 15; }
 
             try {
-                const gRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=ar`);
-                const gData = await gRes.json();
-                const addr = gData.address;
-                document.getElementById('res_loc').innerText = `${addr.suburb || addr.city || 'منطقة مأهولة'}، ${addr.country}`;
+                const g = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=ar`);
+                const gd = await g.json();
+                const a = gd.address;
+                document.getElementById('d_loc').innerText = `${a.suburb || a.city || 'منطقة مجهولة'}، ${a.country}`;
                 
-                // مقارنة الدولة: GPS vs IP
-                if(addr.country_code !== (netData?.country_code?.toLowerCase() || 'sa')) { vpnAlert = true; riskScore += 10; }
-            } catch(e) { document.getElementById('res_loc').innerText = "تم تحديد الإحداثيات ✅"; }
+                if(a.country_code !== (net?.country_code?.toLowerCase() || 'sa')) { vpn = true; score += 20; }
+            } catch(e) { document.getElementById('d_loc').innerText = "موقعك الحقيقي مؤمن ✅"; }
 
-            // تحديث المؤشرات
-            document.getElementById('res_vpn').innerHTML = vpnAlert ? "<span style='color:var(--danger)'>نشط (مكتشف) 🚩</span>" : "<span style='color:var(--safe)'>غير نشط ✅</span>";
-            document.getElementById('res_fake').innerText = gpsAlert ? "مكتشف 🚩" : "لا يوجد ✅";
-            document.getElementById('res_dev').innerText = navigator.webdriver ? "مفعل 🚩" : "مغلق ✅";
-            if(navigator.webdriver) riskScore += 5;
+            // تحديث العرض
+            document.getElementById('d_vpn').innerHTML = vpn ? "<span style='color:var(--danger)'>مكتشف 🚩</span>" : "<span style='color:var(--safe)'>غير نشط ✅</span>";
+            document.getElementById('d_fake').innerHTML = fake ? "<span style='color:var(--danger)'>تلاعب 🚩</span>" : "<span style='color:var(--safe)'>سليم ✅</span>";
+            document.getElementById('d_dev').innerText = navigator.webdriver ? "نشط 🚩" : "مغلق ✅";
+            if(navigator.webdriver) score += 10;
 
-            showFinalVerdict(riskScore);
-        }, () => showFinalVerdict(20), { enableHighAccuracy: true });
+            showVerdict(score);
+        }, () => showVerdict(50), { enableHighAccuracy: true });
     }
 
-    function showFinalVerdict(score) {
-        document.getElementById('loading-box').style.display = 'none';
-        document.getElementById('results-content').style.display = 'block';
-        const area = document.getElementById('verdict_area');
-        const msg = document.getElementById('status_msg');
-        const sub = document.getElementById('status_sub');
+    function showVerdict(s) {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        const card = document.getElementById('v_card');
+        const msg = document.getElementById('v_msg');
+        const sub = document.getElementById('v_sub');
 
-        if(score === 0) {
-            area.className = "verdict-area v-safe";
-            msg.innerText = "الوضـع: سـليم ✅";
-            sub.innerText = "هويتك حقيقية وبياناتك متطابقة. أنت تتصفح بأمان كامل.";
+        if(s === 0) {
+            card.className = "verdict-card v-safe";
+            msg.innerText = "الوضع: سليم 🛡️";
+            sub.innerText = "جميع البروتوكولات متطابقة. أنت تستخدم هوية حقيقية.";
             tg.HapticFeedback.notificationOccurred('success');
-        } else if(score < 10) {
-            area.className = "verdict-area v-warn";
-            msg.innerText = "الوضـع: مشـبوه ⚠️";
-            sub.innerText = "تم رصد اختلاف بسيط في بيانات الشبكة، تأكد من إغلاق الـ VPN.";
+        } else if(s < 20) {
+            card.className = "verdict-card v-warn";
+            msg.innerText = "الوضع: مشبوه ⚠️";
+            sub.innerText = "تم رصد تناقض طفيف في بيانات الشبكة. يرجى مراجعة الإعدادات.";
             tg.HapticFeedback.notificationOccurred('warning');
         } else {
-            area.className = "verdict-area v-danger";
-            msg.innerText = "الوضـع: مكـشوف 🚫";
-            sub.innerText = "تم كشف محاولة تلاعب واضحة بالهوية أو الموقع الجغرافي.";
+            card.className = "verdict-card v-danger";
+            msg.innerText = "الوضع: مكشوف 🚫";
+            sub.innerText = "تحذير! تم كشف محاولة تلاعب بالشبكة أو استخدام موقع وهمي.";
             tg.HapticFeedback.notificationOccurred('error');
         }
     }
