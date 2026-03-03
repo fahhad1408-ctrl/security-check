@@ -46,14 +46,13 @@
         .label { color: #94a3b8; font-size: 13px; }
         .value { color: #fff; font-weight: 700; font-size: 13px; }
 
-        /* حالة النتيجة */
         .verdict-card { 
             padding: 25px; border-radius: 20px; text-align: center; 
             margin-top: 25px; border: 2px solid transparent; transition: 0.8s;
         }
         .v-safe { border-color: var(--safe); background: var(--safe-glow); color: var(--safe); box-shadow: 0 0 20px var(--safe-glow); }
         .v-warn { border-color: var(--warn); background: var(--warn-glow); color: var(--warn); box-shadow: 0 0 20px var(--warn-glow); }
-        .v-danger { border-color: var(--danger); background: var(--danger-bg); color: var(--danger); box-shadow: 0 0 20px var(--danger-glow); }
+        .v-danger { border-color: var(--danger); background: var(--danger-glow); color: var(--danger); box-shadow: 0 0 20px var(--danger-glow); }
 
         .loader { 
             width: 40px; height: 40px; border: 4px solid #1e293b; border-top-color: var(--accent); 
@@ -80,10 +79,16 @@
 
         <div id="content" style="display:none">
             <div class="card">
+                <span class="section-title">بيانات الحساب والاشتراك</span>
+                <div class="row"><span class="label">المستخدم:</span><span id="u_name" class="value">..</span></div>
+                <div class="row"><span class="label">معرف الـ ID:</span><span id="u_id" class="value">..</span></div>
+            </div>
+
+            <div class="card">
                 <span class="section-title">بيانات العتاد والنظام</span>
                 <div class="row"><span class="label">هوية الجهاز:</span><span id="d_model" class="value">..</span></div>
                 <div class="row"><span class="label">نظام التشغيل:</span><span id="d_os" class="value">..</span></div>
-                <div class="row"><span class="label">البيئة:</span><span id="d_env" class="value">..</span></div>
+                <div class="row"><span class="label">حالة البطارية:</span><span id="d_batt" class="value">..</span></div>
             </div>
 
             <div class="card">
@@ -97,7 +102,7 @@
                 <span class="section-title">تحليل المخاطر</span>
                 <div class="row"><span class="label">الـ VPN:</span><span id="d_vpn" class="value">..</span></div>
                 <div class="row"><span class="label">تلاعب الموقع:</span><span id="d_fake" class="value">..</span></div>
-                <div class="row"><span class="label">وضع المطور:</span><span id="d_dev" class="value">..</span></div>
+                <div class="row"><span class="label">بيئة العمل:</span><span id="d_env" class="value">..</span></div>
             </div>
 
             <div id="v_card" class="verdict-card">
@@ -114,61 +119,65 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
+    // منع الفتح خارج التليجرام
+    if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
+        document.body.innerHTML = '<div style="background:#000; color:red; height:100vh; display:flex; align-items:center; justify-content:center; text-align:center;"><h1>⚠️ الوصول محظور<br>يرجى فتح البوت من تليجرام</h1></div>';
+    }
+
     async function runAudit() {
         document.getElementById('welcome-screen').style.display = 'none';
         document.getElementById('audit-ui').style.display = 'block';
         tg.HapticFeedback.impactOccurred('heavy');
 
+        // جلب بيانات تليجرام
+        const user = tg.initDataUnsafe.user;
+        document.getElementById('u_name').innerText = user.first_name + (user.last_name ? " " + user.last_name : "");
+        document.getElementById('u_id').innerText = user.id;
+
         let score = 0;
         let vpn = false;
         let fake = false;
 
-        // 1. الجهاز
+        // 1. الجهاز والبطارية
         const ua = navigator.userAgent;
         document.getElementById('d_model').innerText = /iPhone|iPad/i.test(ua) ? "Apple iPhone" : /Android/i.test(ua) ? "Android Device" : "Computer/PC";
         document.getElementById('d_os').innerText = navigator.platform;
-        document.getElementById('d_env').innerText = navigator.maxTouchPoints > 0 ? "أصيلة ✅" : "وهمية 🚩";
-        if(navigator.maxTouchPoints === 0) score += 10;
+        document.getElementById('d_env').innerText = navigator.maxTouchPoints > 0 ? "أصيلة ✅" : "بيئة وهمية 🚩";
+        
+        try {
+            const battery = await navigator.getBattery();
+            document.getElementById('d_batt').innerText = `${Math.round(battery.level * 100)}% (${battery.charging ? 'جاري الشحن' : 'تفريغ'})`;
+            if(battery.level === 1 && battery.charging) score += 5; // مؤشر على محاكي
+        } catch(e) { document.getElementById('d_batt').innerText = "مشفر 🔒"; }
 
-        // 2. الشبكة (محاولات متعددة)
+        // 2. الشبكة
         let net = null;
         try {
-            const sources = ['https://ipwho.is/', 'https://ipapi.co/json/'];
-            for(let s of sources) {
-                const r = await fetch(s);
-                net = await r.json();
-                if(net.country) break;
-            }
+            const r = await fetch('https://ipwho.is/');
+            net = await r.json();
+            document.getElementById('d_ip_c').innerText = net.country || "غير معروف";
+            document.getElementById('d_isp').innerText = net.connection?.isp || "محلي";
+            if(net.country_code !== "SA") vpn = true;
         } catch(e) {}
 
-        if(net) {
-            document.getElementById('d_ip_c').innerText = net.country || net.country_name;
-            document.getElementById('d_isp').innerText = (net.connection?.isp || net.org || "محلي").split(' ')[0];
-            if(!['SA', 'Saudi Arabia'].includes(net.country_code || net.country)) vpn = true;
-        }
-
-        // 3. الموقع الصارم
+        // 3. الموقع
         navigator.geolocation.getCurrentPosition(async (pos) => {
             const {latitude: lat, longitude: lon, accuracy: acc} = pos.coords;
-            if(acc <= 1 || acc === 10) { fake = true; score += 15; }
+            if(acc < 5) { fake = true; score += 20; } // دقة مبالغ فيها
 
             try {
                 const g = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=ar`);
                 const gd = await g.json();
-                const a = gd.address;
-                document.getElementById('d_loc').innerText = `${a.suburb || a.city || 'منطقة مجهولة'}، ${a.country}`;
+                document.getElementById('d_loc').innerText = `${gd.address.city || gd.address.state || 'منطقة نشطة'}، المملكة العربية السعودية`;
                 
-                if(a.country_code !== (net?.country_code?.toLowerCase() || 'sa')) { vpn = true; score += 20; }
-            } catch(e) { document.getElementById('d_loc').innerText = "موقعك الحقيقي مؤمن ✅"; }
+                if(net && gd.address.country_code !== net.country_code?.toLowerCase()) { vpn = true; score += 30; }
+            } catch(e) { document.getElementById('d_loc').innerText = "تم التحديد ✅"; }
 
-            // تحديث العرض
             document.getElementById('d_vpn').innerHTML = vpn ? "<span style='color:var(--danger)'>مكتشف 🚩</span>" : "<span style='color:var(--safe)'>غير نشط ✅</span>";
-            document.getElementById('d_fake').innerHTML = fake ? "<span style='color:var(--danger)'>تلاعب 🚩</span>" : "<span style='color:var(--safe)'>سليم ✅</span>";
-            document.getElementById('d_dev').innerText = navigator.webdriver ? "نشط 🚩" : "مغلق ✅";
-            if(navigator.webdriver) score += 10;
+            document.getElementById('d_fake').innerHTML = fake ? "<span style='color:var(--danger)'>نشط 🚩</span>" : "<span style='color:var(--safe)'>سليم ✅</span>";
 
-            showVerdict(score);
-        }, () => showVerdict(50), { enableHighAccuracy: true });
+            showVerdict(score + (vpn ? 40 : 0));
+        }, () => showVerdict(60), { enableHighAccuracy: true });
     }
 
     function showVerdict(s) {
@@ -178,20 +187,20 @@
         const msg = document.getElementById('v_msg');
         const sub = document.getElementById('v_sub');
 
-        if(s === 0) {
+        if(s < 10) {
             card.className = "verdict-card v-safe";
-            msg.innerText = "الوضع: سليم 🛡️";
-            sub.innerText = "جميع البروتوكولات متطابقة. أنت تستخدم هوية حقيقية.";
+            msg.innerText = "الوضع: آمن 🛡️";
+            sub.innerText = "هويتك حقيقية ولم يتم العثور على أي أدوات تزييف.";
             tg.HapticFeedback.notificationOccurred('success');
-        } else if(s < 20) {
+        } else if(s < 50) {
             card.className = "verdict-card v-warn";
             msg.innerText = "الوضع: مشبوه ⚠️";
-            sub.innerText = "تم رصد تناقض طفيف في بيانات الشبكة. يرجى مراجعة الإعدادات.";
+            sub.innerText = "تم رصد تناقض بسيط بين الموقع والشبكة. يرجى الحذر.";
             tg.HapticFeedback.notificationOccurred('warning');
         } else {
             card.className = "verdict-card v-danger";
             msg.innerText = "الوضع: مكشوف 🚫";
-            sub.innerText = "تحذير! تم كشف محاولة تلاعب بالشبكة أو استخدام موقع وهمي.";
+            sub.innerText = "تحذير جنائي! تم كشف استخدام موقع وهمي أو VPN نشط.";
             tg.HapticFeedback.notificationOccurred('error');
         }
     }
