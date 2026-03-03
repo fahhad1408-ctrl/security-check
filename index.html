@@ -12,22 +12,53 @@
             --danger: #ff0055; --danger-glow: rgba(255, 0, 85, 0.3);
             --bg: #020617; --card: #1e293b; --accent: #38bdf8;
         }
-        body { background: var(--bg); color: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 20px; overflow-x: hidden; user-select: none; }
+        
+        body { background: var(--bg); color: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 20px; overflow-x: hidden; }
         .container { max-width: 450px; margin: 0 auto; }
-        #welcome-screen { text-align: center; padding-top: 60px; }
+
+        /* شاشة الترحيب */
+        #welcome-screen { text-align: center; padding-top: 60px; transition: 0.5s; }
         .radar { position: relative; width: 120px; height: 120px; margin: 0 auto 30px; border: 2px solid var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 50px; }
         .radar::after { content: ''; position: absolute; width: 100%; height: 100%; border: 2px solid var(--accent); border-radius: 50%; animation: ripple 2s linear infinite; }
         @keyframes ripple { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
-        .main-btn { background: linear-gradient(45deg, #0ea5e9, #2563eb); color: white; border: none; padding: 20px 45px; border-radius: 15px; font-weight: 800; font-size: 18px; cursor: pointer; width: 100%; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3); }
+
+        .main-btn { 
+            background: linear-gradient(45deg, #0ea5e9, #2563eb); color: white; border: none; 
+            padding: 20px 45px; border-radius: 15px; font-weight: 800; font-size: 18px; 
+            cursor: pointer; width: 100%; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+            transition: 0.3s;
+        }
+        .main-btn:active { transform: scale(0.95); }
+
+        /* واجهة النتائج */
         #audit-ui { display: none; }
-        .card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border-radius: 20px; padding: 18px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; }
+        .audit-header { text-align: center; margin-bottom: 25px; }
+        .audit-header h2 { margin: 0; color: var(--accent); letter-spacing: 1px; }
+
+        .card { 
+            background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px);
+            border-radius: 20px; padding: 18px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; 
+        }
         .section-title { font-size: 11px; color: #64748b; margin-bottom: 10px; display: block; border-right: 3px solid var(--accent); padding-right: 8px; }
+        
         .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .row:last-child { border: none; }
+        .label { color: #94a3b8; font-size: 13px; }
         .value { color: #fff; font-weight: 700; font-size: 13px; }
-        .verdict-card { padding: 25px; border-radius: 20px; text-align: center; margin-top: 25px; border: 2px solid transparent; }
-        .v-safe { border-color: var(--safe); background: var(--safe-glow); color: var(--safe); }
-        .v-danger { border-color: var(--danger); background: var(--danger-glow); color: var(--danger); }
-        .loader { width: 40px; height: 40px; border: 4px solid #1e293b; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 30px auto; }
+
+        /* حالة النتيجة */
+        .verdict-card { 
+            padding: 25px; border-radius: 20px; text-align: center; 
+            margin-top: 25px; border: 2px solid transparent; transition: 0.8s;
+        }
+        .v-safe { border-color: var(--safe); background: var(--safe-glow); color: var(--safe); box-shadow: 0 0 20px var(--safe-glow); }
+        .v-warn { border-color: var(--warn); background: var(--warn-glow); color: var(--warn); box-shadow: 0 0 20px var(--warn-glow); }
+        .v-danger { border-color: var(--danger); background: var(--danger-bg); color: var(--danger); box-shadow: 0 0 20px var(--danger-glow); }
+
+        .loader { 
+            width: 40px; height: 40px; border: 4px solid #1e293b; border-top-color: var(--accent); 
+            border-radius: 50%; animation: spin 1s linear infinite; margin: 30px auto; 
+        }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -36,41 +67,134 @@
 <div class="container">
     <div id="welcome-screen">
         <div class="radar">🛡️</div>
-        <h1>Cyber Shield V10</h1>
+        <h1 style="margin:0 0 10px">Cyber Shield V10</h1>
         <p style="color: #64748b; margin-bottom: 40px;">نظام التحقيق الجنائي الرقمي المستقل</p>
         <button class="main-btn" onclick="runAudit()">تفعيل الفحص الشامل</button>
     </div>
 
     <div id="audit-ui">
-        <div style="text-align:center"><h2>تقرير التحقيق</h2><div id="loader" class="loader"></div></div>
+        <div class="audit-header">
+            <h2>تقرير التحقيق</h2>
+            <div id="loader" class="loader"></div>
+        </div>
+
         <div id="content" style="display:none">
             <div class="card">
-                <span class="section-title">بيانات الحساب</span>
-                <div class="row"><span>المستخدم:</span><span id="u_name" class="value">..</span></div>
-                <div class="row"><span>معرف الـ ID:</span><span id="u_id" class="value">..</span></div>
+                <span class="section-title">بيانات العتاد والنظام</span>
+                <div class="row"><span class="label">هوية الجهاز:</span><span id="d_model" class="value">..</span></div>
+                <div class="row"><span class="label">نظام التشغيل:</span><span id="d_os" class="value">..</span></div>
+                <div class="row"><span class="label">البيئة:</span><span id="d_env" class="value">..</span></div>
             </div>
+
             <div class="card">
                 <span class="section-title">الموقع والشبكة</span>
-                <div class="row"><span>الدولة:</span><span id="d_ip_c" class="value">..</span></div>
-                <div class="row"><span>الموقع:</span><span id="d_loc" class="value" style="color:var(--accent)">..</span></div>
+                <div class="row"><span class="label">دولة الـ IP:</span><span id="d_ip_c" class="value">..</span></div>
+                <div class="row"><span class="label">مزود الخدمة:</span><span id="d_isp" class="value">..</span></div>
+                <div class="row"><span class="label">موقعك الدقيق:</span><span id="d_loc" class="value" style="color:var(--accent)">..</span></div>
             </div>
+
             <div class="card">
                 <span class="section-title">تحليل المخاطر</span>
-                <div class="row"><span>الـ VPN:</span><span id="d_vpn" class="value">..</span></div>
-                <div class="row"><span>تلاعب الموقع:</span><span id="d_fake" class="value">..</span></div>
+                <div class="row"><span class="label">الـ VPN:</span><span id="d_vpn" class="value">..</span></div>
+                <div class="row"><span class="label">تلاعب الموقع:</span><span id="d_fake" class="value">..</span></div>
+                <div class="row"><span class="label">وضع المطور:</span><span id="d_dev" class="value">..</span></div>
             </div>
+
             <div id="v_card" class="verdict-card">
-                <div id="v_msg" style="font-size: 22px; font-weight: 900;">فحص..</div>
-                <div id="v_sub">جاري النتيجة..</div>
+                <div id="v_msg" style="font-size: 22px; font-weight: 900; margin-bottom: 5px;">فحص..</div>
+                <div id="v_sub" style="font-size: 13px; opacity: 0.9;">جاري استخراج النتيجة النهائية</div>
             </div>
+
             <button onclick="location.reload()" style="width:100%; padding:15px; margin-top:20px; background:none; border:1px solid #334155; color:#64748b; border-radius:15px; cursor:pointer">إعادة تهيئة النظام</button>
         </div>
     </div>
 </div>
 
 <script>
-    // الجزء المشفر (Obfuscated) - لا يمكن للمستخدم فهمه أو سرقة المنطق البرمجي منه
-    var _0x539c=['contextmenu','preventDefault','onkeydown','keyCode','ctrlKey','shiftKey','expand','initDataUnsafe','user','first_name','id','welcome-screen','style','display','none','audit-ui','block','https://ipwho.is/','json','country','country_code','SA','d_ip_c','innerText','d_vpn','innerHTML','color:var(--safe)','سليم\x20✅','color:var(--danger)','نشط\x20🚩','d_fake','coords','accuracy','محتمل\x20🚩','d_loc','تم\x20التحديد\x20بدقة','loader','content','v_card','className','verdict-card\x20v-safe','v_msg','الوضع:\x20آمن\x20🛡️','verdict-card\x20v-danger','الوضع:\x20مكشوف\x20🚫','getCurrentPosition'];(function(_0x2d17f1,_0x539c13){var _0x45484a=function(_0x264903){while(--_0x264903){_0x2d17f1['push'](_0x2d17f1['shift']());}};_0x45484a(++_0x539c13);}(_0x539c,0x10b));var _0x4548=function(_0x2d17f1,_0x539c13){_0x2d17f1=_0x2d17f1-0x0;var _0x45484a=_0x539c[_0x2d17f1];return _0x45484a;};document['addEventListener'](_0x4548('0x0'),_0x539c13=>_0x539c13[_0x4548('0x1')]());document[_0x4548('0x2')]=function(_0x264903){if(_0x264903[_0x4548('0x3')]==0x7b||(_0x264903[_0x4548('0x4')]&&_0x264903[_0x4548('0x5')]&&_0x264903[_0x4548('0x3')]==0x49)||_0x264903[_0x4548('0x4')]&&_0x264903[_0x4548('0x3')]==0x55)return![];};const tg=window['Telegram']['WebApp'];tg[_0x4548('0x6')]();async function runAudit(){document['getElementById'](_0x4548('0xb'))[_0x4548('0xc')][_0x4548('0xd')]=_0x4548('0xe');document['getElementById'](_0x4548('0xf'))[_0x4548('0xc')][_0x4548('0xd')]=_0x4548('0x10');const _0x2d17f1=tg[_0x4548('0x7')][_0x4548('0x8')]||{'first_name':'Guest','id':'0000'};document['getElementById']('u_name')[_0x4548('0x17')]=_0x2d17f1[_0x4548('0x9')];document['getElementById']('u_id')[_0x4548('0x17')]=_0x2d17f1[_0x4548('0xa')];let _0x539c13=0x0;let _0x45484a=![];try{const _0x264903=await fetch(_0x4548('0x11'));const _0x10b06a=await _0x264903[_0x4548('0x12')]();document['getElementById'](_0x4548('0x16'))[_0x4548('0x17')]=_0x10b06a[_0x4548('0x13')];if(_0x10b06a[_0x4548('0x14')]!==_0x4548('0x15'))_0x45484a=!![];}catch(_0x403f90){}navigator['geolocation'][_0x4548('0x2d')](async _0x2077e5=>{document['getElementById'](_0x4548('0x18'))[_0x4548('0x19')]=_0x45484a?'<span\x20style=\x22'+_0x4548('0x1c')+'\x22>'+_0x4548('0x1d')+'</span>':'<span\x20style=\x22'+_0x4548('0x1a')+'\x22>'+_0x4548('0x1b')+'</span>';document['getElementById'](_0x4548('0x1e'))[_0x4548('0x19')]=_0x2077e5[_0x4548('0x1f')][_0x4548('0x20')]<0xa?'<span\x20style=\x22'+_0x4548('0x1c')+'\x22>'+_0x4548('0x21')+'</span>':'<span\x20style=\x22'+_0x4548('0x1a')+'\x22>'+_0x4548('0x1b')+'</span>';document['getElementById'](_0x4548('0x22'))[_0x4548('0x17')]=_0x4548('0x23');showVerdict(_0x45484a?0x64:0x0);},()=>showVerdict(0x32),{'enableHighAccuracy':!![]});}function showVerdict(_0x2d17f1){document['getElementById'](_0x4548('0x24'))[_0x4548('0xc')][_0x4548('0xd')]=_0x4548('0xe');document['getElementById'](_0x4548('0x25'))[_0x4548('0xc')][_0x4548('0xd')]=_0x4548('0x10');const _0x539c13=document['getElementById'](_0x4548('0x26'));if(_0x2d17f1===0x0){_0x539c13[_0x4548('0x27')]=_0x4548('0x28');document['getElementById'](_0x4548('0x29'))[_0x4548('0x17')]=_0x4548('0x2a');}else{_0x539c13[_0x4548('0x27')]=_0x4548('0x2b');document['getElementById'](_0x4548('0x29'))[_0x4548('0x17')]=_0x4548('0x2c');}}
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    async function runAudit() {
+        document.getElementById('welcome-screen').style.display = 'none';
+        document.getElementById('audit-ui').style.display = 'block';
+        tg.HapticFeedback.impactOccurred('heavy');
+
+        let score = 0;
+        let vpn = false;
+        let fake = false;
+
+        // 1. الجهاز
+        const ua = navigator.userAgent;
+        document.getElementById('d_model').innerText = /iPhone|iPad/i.test(ua) ? "Apple iPhone" : /Android/i.test(ua) ? "Android Device" : "Computer/PC";
+        document.getElementById('d_os').innerText = navigator.platform;
+        document.getElementById('d_env').innerText = navigator.maxTouchPoints > 0 ? "أصيلة ✅" : "وهمية 🚩";
+        if(navigator.maxTouchPoints === 0) score += 10;
+
+        // 2. الشبكة (محاولات متعددة)
+        let net = null;
+        try {
+            const sources = ['https://ipwho.is/', 'https://ipapi.co/json/'];
+            for(let s of sources) {
+                const r = await fetch(s);
+                net = await r.json();
+                if(net.country) break;
+            }
+        } catch(e) {}
+
+        if(net) {
+            document.getElementById('d_ip_c').innerText = net.country || net.country_name;
+            document.getElementById('d_isp').innerText = (net.connection?.isp || net.org || "محلي").split(' ')[0];
+            if(!['SA', 'Saudi Arabia'].includes(net.country_code || net.country)) vpn = true;
+        }
+
+        // 3. الموقع الصارم
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const {latitude: lat, longitude: lon, accuracy: acc} = pos.coords;
+            if(acc <= 1 || acc === 10) { fake = true; score += 15; }
+
+            try {
+                const g = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=ar`);
+                const gd = await g.json();
+                const a = gd.address;
+                document.getElementById('d_loc').innerText = `${a.suburb || a.city || 'منطقة مجهولة'}، ${a.country}`;
+                
+                if(a.country_code !== (net?.country_code?.toLowerCase() || 'sa')) { vpn = true; score += 20; }
+            } catch(e) { document.getElementById('d_loc').innerText = "موقعك الحقيقي مؤمن ✅"; }
+
+            // تحديث العرض
+            document.getElementById('d_vpn').innerHTML = vpn ? "<span style='color:var(--danger)'>مكتشف 🚩</span>" : "<span style='color:var(--safe)'>غير نشط ✅</span>";
+            document.getElementById('d_fake').innerHTML = fake ? "<span style='color:var(--danger)'>تلاعب 🚩</span>" : "<span style='color:var(--safe)'>سليم ✅</span>";
+            document.getElementById('d_dev').innerText = navigator.webdriver ? "نشط 🚩" : "مغلق ✅";
+            if(navigator.webdriver) score += 10;
+
+            showVerdict(score);
+        }, () => showVerdict(50), { enableHighAccuracy: true });
+    }
+
+    function showVerdict(s) {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        const card = document.getElementById('v_card');
+        const msg = document.getElementById('v_msg');
+        const sub = document.getElementById('v_sub');
+
+        if(s === 0) {
+            card.className = "verdict-card v-safe";
+            msg.innerText = "الوضع: سليم 🛡️";
+            sub.innerText = "جميع البروتوكولات متطابقة. أنت تستخدم هوية حقيقية.";
+            tg.HapticFeedback.notificationOccurred('success');
+        } else if(s < 20) {
+            card.className = "verdict-card v-warn";
+            msg.innerText = "الوضع: مشبوه ⚠️";
+            sub.innerText = "تم رصد تناقض طفيف في بيانات الشبكة. يرجى مراجعة الإعدادات.";
+            tg.HapticFeedback.notificationOccurred('warning');
+        } else {
+            card.className = "verdict-card v-danger";
+            msg.innerText = "الوضع: مكشوف 🚫";
+            sub.innerText = "تحذير! تم كشف محاولة تلاعب بالشبكة أو استخدام موقع وهمي.";
+            tg.HapticFeedback.notificationOccurred('error');
+        }
+    }
 </script>
 </body>
 </html>
