@@ -3,144 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فحوصات الأمان وتغيير المواقع</title>
-    <!-- استدعاء مكتبة تليجرام الرسمية للويب أب -->
+    <title>فحص الأمان المتقدم وكشف التلاعب</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
             font-family: Tahoma, sans-serif;
-            background-color: #f4f6f9;
-            color: #333;
+            background-color: #0f172a;
+            color: #f8fafc;
             text-align: center;
             padding: 20px;
             margin: 0;
-            /* منع تحديد النصوص بالرؤية أو الماوس */
             -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
             user-select: none;
         }
         .container {
-            max-width: 400px;
-            margin: 40px auto;
-            background: #fff;
+            max-width: 420px;
+            margin: 30px auto;
+            background: #1e293b;
             padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid #334155;
         }
         h2 {
-            color: #0088cc;
-            margin-bottom: 10px;
+            color: #38bdf8;
+            margin-bottom: 15px;
         }
         p {
-            color: #666;
+            color: #94a3b8;
             font-size: 14px;
             line-height: 1.6;
         }
         .btn {
-            background-color: #27ae60;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 14px 20px;
             font-size: 16px;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             width: 100%;
             margin-top: 20px;
             font-weight: bold;
-            transition: background 0.3s;
+            transition: opacity 0.3s;
         }
         .btn:hover {
-            background-color: #219653;
+            opacity: 0.9;
         }
-        #result {
-            margin-top: 20px;
-            font-weight: bold;
-            font-size: 14px;
+        #result-box {
+            margin-top: 25px;
+            text-align: right;
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            font-size: 13px;
+            border: 1px solid #334155;
         }
+        .status-pass { color: #4ade80; font-weight: bold; }
+        .status-fail { color: #f87171; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="container" id="main-card">
-        <h2>🛡 نظام فحص الأمان</h2>
-        <p id="welcome-msg">أهلاً بك. اضغط على الزر أدناه لبدء عملية التحقق والفحص الأمني الحالي لجهازك.</p>
+    <div class="container">
+        <h2>🛡 فحص الأمان الشامل</h2>
+        <p>انقر أدناه لبدء فحص بيئة النظام، كشف الـ VPN، رصد التلاعب بالموقع الإحداثي، والتحقق من الأمان.</p>
         
-        <button class="btn" id="start-btn" onclick="requestLocation()">بدء الفحص 🔍</button>
+        <button class="btn" id="start-btn" onclick="runFullSecurityScan()">بدء الفحص الشامل 🔍</button>
         
-        <div id="result"></div>
+        <div id="result-box">
+            <div id="scan-content">جاري فحص الجهاز والشبكة...</div>
+        </div>
     </div>
 
     <script>
-        // 🔒 حماية المصدر: منع النقر بالزر الأيمن للفأرة
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            return false;
-        });
-
-        // 🔒 حماية المصدر: منع اختصارات لوحة المفاتيح لعرض المصدر أو أدوات المطورين
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'F12') {
-                e.preventDefault();
-                return false;
-            }
-            if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'h' || e.key === 'H')) {
-                e.preventDefault();
-                return false;
-            }
-            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c' || e.key === 'K' || e.key === 'k')) {
+        // 🔒 حماية المصدر (منع الماوس الأيمن والاختصارات)
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F12' || (e.ctrlKey && ['u','U','s','S','i','I','j','J','c','C'].includes(e.key))) {
                 e.preventDefault();
                 return false;
             }
         });
 
-        // التحقق من البيئة وتشغيل تليجرام
-        window.addEventListener('DOMContentLoaded', (event) => {
+        // حماية تليجرام
+        window.addEventListener('DOMContentLoaded', () => {
             const telegram = window.Telegram && window.Telegram.WebApp;
-            
-            // 🔒 حماية تليجرام: التأكد أن الصفحة مفتوحة حصرياً من داخل التطبيق وليست من سفاري أو المتصفح
             if (!telegram || !telegram.initData || telegram.initData === "") {
                 document.body.innerHTML = `
-                    <div style="text-align: center; margin-top: 80px; font-family: Tahoma; color: #c0392b; padding: 20px;">
+                    <div style="text-align:center; margin-top:100px; color:#f87171; font-family:Tahoma;">
                         <h2>❌ غير مسموح بالدخول</h2>
-                        <p>عذراً، لا يمكنك فتح هذه الصفحة إلا من خلال بوت تليجرام الرسمي حصرياً.</p>
-                    </div>
-                `;
+                        <p>يجب فتح الرابط حصرياً من داخل بوت تليجرام الرسمي.</p>
+                    </div>`;
             } else {
                 telegram.ready();
                 telegram.expand();
             }
         });
 
-        // طلب الموقع الجغرافي عند الضغط على الزر
-        function requestLocation() {
-            const resultDiv = document.getElementById("result");
+        // دالة الفحص الأمني الشامل
+        async function runFullSecurityScan() {
             const btn = document.getElementById("start-btn");
+            const box = document.getElementById("result-box");
+            const content = document.getElementById("scan-content");
+            
+            btn.disabled = true;
+            btn.innerText = "جاري الفحص الدقيق...";
+            box.style.display = "block";
+            content.innerHTML = "📡 جاري فحص الشبكة والاتصال (VPN)...<br>";
 
-            if (navigator.geolocation) {
-                resultDiv.style.color = "#e67e22";
-                resultDiv.innerText = "جاري التحقق من إحداثيات الموقع الحالي...";
-                btn.disabled = true;
+            let vpnDetected = false;
+            let ipInfo = "غير معروف";
 
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        resultDiv.style.color = "#27ae60";
-                        resultDiv.innerHTML = `✅ تم الفحص بنجاح!<br>خط العرض: ${lat.toFixed(4)}<br>خط الطول: ${lon.toFixed(4)}`;
-                        btn.style.display = "none";
-                    },
-                    (error) => {
-                        resultDiv.style.color = "#c0392b";
-                        resultDiv.innerText = "❌ تعذر تحديد الموقع. يرجى السماح للخدمة بالوصول للموقع لإتمام الفحص.";
-                        btn.disabled = false;
-                    },
-                    { timeout: 10000, enableHighAccuracy: true }
-                );
-            } else {
-                resultDiv.style.color = "#c0392b";
-                resultDiv.innerText = "متصفحك لا يدعم خاصية تحديد الموقع.";
+            // 1. فحص الـ VPN عبر خدمة فحص الـ IP والشبكة
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+                ipInfo = data.ip || "مخفي";
+                
+                // مؤشرات أولية للـ VPN أو الاستضافات المشبوهة
+                const org = (data.org || "").toLowerCase();
+                const network = (data.network || "").toLowerCase();
+                if (org.includes('vpn') || org.includes('proxy') || org.includes('hosting') || org.includes('cloudflare') || org.includes('digitalocean')) {
+                    vpnDetected = true;
+                }
+            } catch (e) {
+                ipInfo = "تعذر الفحص";
             }
+
+            content.innerHTML += "📍 جاري رصد إحداثيات الموقع وكشف التلاعب (Mock GPS)...<br>";
+
+            // 2. فحص الموقع الجغرافي وكشف التلاعب الإحداثي
+            if (!navigator.geolocation) {
+                content.innerHTML += "<span class='status-fail'>❌ المتصفح لا يدعم تحديد الموقع.</span>";
+                btn.disabled = false;
+                btn.innerText = "إعادة الفحص";
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const accuracy = position.coords.accuracy; // دقة الإحداثيات بالمتر
+
+                    let fakeGpsDetected = false;
+
+                    // المؤشر الذكي لكشف التلاعب: 
+                    // برامج الFake GPS غالباً تعطيك دقة مثالية بشكل مريب (مثل accuracy = 0 أو رقم ثابت بدقة متناهية جداً لا تصدر عن مستشعر حقيقي)
+                    // أو إحداثيات بأرقام أصفار متكررة، أو دقة ضعيفة جداً فوق الكيلومتر في بيئة مفتوحة.
+                    if (accuracy === 0 || accuracy === 1 || (accuracy < 3 && !position.coords.altitude)) {
+                        fakeGpsDetected = true;
+                    }
+
+                    // تجهيز التقرير النهائي
+                    let reportHTML = `<b>📊 تقرير الفحص الأمني:</b><br>`;
+                    reportHTML += `• عنوان الـ IP: <code>${ipInfo}</code><br>`;
+                    
+                    if (vpnDetected) {
+                        reportHTML += `• فحص الاتصال: <span class='status-fail'>⚠️ محتمل استخدام VPN / بروكسي</span><br>`;
+                    } else {
+                        reportHTML += `• فحص الاتصال: <span class='status-pass'>✅ اتصال محلي طبيعي (سليم)</span><br>`;
+                    }
+
+                    reportHTML += `• دقة المستشعر: ${accuracy} متر<br>`;
+
+                    if (fakeGpsDetected) {
+                        reportHTML += `• فحص الموقع: <span class='status-fail'>🚨 تم رصد تلاعب بالموقع (Mock / Fake GPS)</span><br>`;
+                    } else {
+                        reportHTML += `• فحص الموقع: <span class='status-pass'>✅ الموقع سليم وحقيقي (غير مكشوف للتلاعب)</span><br>`;
+                    }
+
+                    reportHTML += `<hr style="border-color:#334155; margin:10px 0;">`;
+                    reportHTML += `الإحداثيات المرصودة:<br>خط العرض: ${lat.toFixed(5)}<br>خط الطول: ${lon.toFixed(5)}`;
+
+                    content.innerHTML = reportHTML;
+                    btn.style.display = "none";
+                },
+                (error) => {
+                    content.innerHTML = "<span class='status-fail'>❌ فشل الفحص: يجب السماح للمتصفح بالوصول للموقع لإتمام التحقق الأمني.</span>";
+                    btn.disabled = false;
+                    btn.innerText = "إعادة الفحص";
+                },
+                { timeout: 12000, enableHighAccuracy: true }
+            );
         }
     </script>
 </body>
