@@ -53,18 +53,20 @@
         }
         .v-safe { border-color: var(--safe); background: var(--safe-glow); color: var(--safe); box-shadow: 0 0 20px var(--safe-glow); }
         .v-warn { border-color: var(--warn); background: var(--warn-glow); color: var(--warn); box-shadow: 0 0 20px var(--warn-glow); }
-        .v-danger { border-color: var(--danger); background: var(--danger-bg); color: var(--danger); box-shadow: 0 0 20px var(--danger-glow); }
+        .v-danger { border-color: var(--danger); background: var(--danger-glow); color: var(--danger); box-shadow: 0 0 20px var(--danger-glow); }
 
         .loader { 
             width: 40px; height: 40px; border: 4px solid #1e293b; border-top-color: var(--accent); 
             border-radius: 50%; animation: spin 1s linear infinite; margin: 30px auto; 
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .error-box { background: #2a1212; border: 1px solid #ff4444; padding: 25px; border-radius: 15px; margin-top: 50px; text-align: center; color: #ff8888; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="main-container">
     <div id="welcome-screen">
         <div class="radar">🛡️</div>
         <h1 style="margin:0 0 10px">Cyber Shield V10</h1>
@@ -114,6 +116,29 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
+    // 🔒 التحقق الأمني: منع فتح الموقع من خارج تلجرام أو عبر رابط مسروق بدون تفعيل
+    if (!tg.initData || !tg.initDataUnsafe) {
+        document.getElementById('main-container').innerHTML = `
+            <div class="error-box">
+                <h2>❌ غير مسموح بالدخول!</h2>
+                <p>لا يمكن فتح هذا الرابط من متصفح خارجي. يجب الدخول حصرياً من خلال بوت تلجرام الرسمي.</p>
+            </div>`;
+        throw new Error("Unauthorized Browser");
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const userParam = urlParams.get('user');
+    const telegramUserId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
+
+    if (!userParam || (telegramUserId && String(userParam) !== String(telegramUserId))) {
+        document.getElementById('main-container').innerHTML = `
+            <div class="error-box">
+                <h2>⚠ تنبيه أمني</h2>
+                <p>تم اكتشاف محاولة استخدام رابط غير صالح أو تم مشاركته بطريقة غير قانونية. يرجى التفعيل عبر البوت.</p>
+            </div>`;
+        throw new Error("Invalid Session");
+    }
+
     async function runAudit() {
         document.getElementById('welcome-screen').style.display = 'none';
         document.getElementById('audit-ui').style.display = 'block';
@@ -130,7 +155,7 @@
         document.getElementById('d_env').innerText = navigator.maxTouchPoints > 0 ? "أصيلة ✅" : "وهمية 🚩";
         if(navigator.maxTouchPoints === 0) score += 10;
 
-        // 2. الشبكة (محاولات متعددة)
+        // 2. الشبكة
         let net = null;
         try {
             const sources = ['https://ipwho.is/', 'https://ipapi.co/json/'];
@@ -161,7 +186,6 @@
                 if(a.country_code !== (net?.country_code?.toLowerCase() || 'sa')) { vpn = true; score += 20; }
             } catch(e) { document.getElementById('d_loc').innerText = "موقعك الحقيقي مؤمن ✅"; }
 
-            // تحديث العرض
             document.getElementById('d_vpn').innerHTML = vpn ? "<span style='color:var(--danger)'>مكتشف 🚩</span>" : "<span style='color:var(--safe)'>غير نشط ✅</span>";
             document.getElementById('d_fake').innerHTML = fake ? "<span style='color:var(--danger)'>تلاعب 🚩</span>" : "<span style='color:var(--safe)'>سليم ✅</span>";
             document.getElementById('d_dev').innerText = navigator.webdriver ? "نشط 🚩" : "مغلق ✅";
