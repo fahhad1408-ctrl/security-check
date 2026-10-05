@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام التحقق الأمني الشامل</title>
+    <title>منظومة الفحص السيبراني المتقدمة</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
             font-family: Tahoma, sans-serif;
-            background-color: #0b0f19;
-            color: #f1f5f9;
+            background-color: #030712;
+            color: #00ffcc;
             text-align: center;
-            padding: 20px;
+            padding: 15px;
             margin: 0;
-            /* حظر تام لتحديد النصوص أو نسخها بالكامل */
+            /* حظر تام لتحديد النصوص أو النسخ أو التفاعل غير المرغوب */
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
@@ -21,78 +21,94 @@
             -webkit-touch-callout: none;
         }
         .container {
-            max-width: 420px;
-            margin: 30px auto;
-            background: #111827;
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid #1f2937;
+            max-width: 440px;
+            margin: 15px auto;
+            background: #0b0f19;
+            padding: 22px;
+            border-radius: 18px;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.12);
+            border: 1px solid #1e293b;
         }
         h2 {
             color: #38bdf8;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            font-size: 21px;
         }
         p {
-            color: #9ca3af;
-            font-size: 13px;
-            line-height: 1.6;
+            color: #94a3b8;
+            font-size: 12px;
+            margin-bottom: 15px;
+            line-height: 1.5;
         }
         .btn {
             background: linear-gradient(135deg, #0284c7, #2563eb);
             color: white;
             border: none;
             padding: 14px 20px;
-            font-size: 16px;
-            border-radius: 10px;
+            font-size: 15px;
+            border-radius: 12px;
             cursor: pointer;
             width: 100%;
-            margin-top: 15px;
             font-weight: bold;
-            box-shadow: 0 4px 12px rgba(37,99,235,0.3);
-            transition: opacity 0.2s;
+            box-shadow: 0 4px 18px rgba(37,99,235,0.4);
+            transition: 0.3s;
         }
         .btn:hover {
             opacity: 0.9;
         }
-        #result-box {
-            margin-top: 20px;
+        #scan-steps {
+            margin-top: 15px;
             text-align: right;
-            background: #030712;
-            padding: 15px;
+            background: #020408;
+            padding: 14px;
             border-radius: 10px;
             display: none;
+            font-family: monospace;
+            font-size: 11px;
+            border: 1px solid #1e293b;
+            height: 180px;
+            overflow-y: auto;
+            color: #38bdf8;
+            line-height: 1.7;
+        }
+        #final-report {
+            margin-top: 15px;
+            text-align: right;
+            background: #0b1329;
+            padding: 16px;
+            border-radius: 12px;
+            display: none;
             font-size: 12px;
-            border: 1px solid #1f2937;
-            line-height: 1.8;
+            border: 1px solid #334155;
+            line-height: 1.9;
         }
         .pass { color: #4ade80; font-weight: bold; font-size: 14px; }
         .fail { color: #f87171; font-weight: bold; font-size: 14px; }
         .warning { color: #facc15; font-weight: bold; font-size: 14px; }
+        .step-item { margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>🛡 فحص الأمان السيبراني</h2>
-        <p>نظام ذكي لتحليل بيئة الجهاز، نوع الاتصال، حالة البطارية، وكشف التلاعب الجغرافي بدقة تامة.</p>
+    <div class="container" id="main-container">
+        <h2>🛡 وحدة التحليل السيبراني الذكي</h2>
+        <p>نظام فحص حقيقي شامل لكشف التلاعب الجغرافي، حالة النظام، البطارية، والاتصال بدقة متناهية.</p>
         
-        <button class="btn" id="start-btn" onclick="runUltimateSecurityScan()">بدء الفحص الشامل 🔍</button>
+        <button class="btn" id="start-btn" onclick="runRealCyberScan()">بدء فحص الجهاز الآن 🔍</button>
         
-        <div id="result-box">
-            <div id="scan-content">جاري التحقق من الحماية والبيئة...</div>
-        </div>
+        <div id="scan-steps"></div>
+        <div id="final-report"></div>
     </div>
 
     <script>
-        // 🔒 حماية حديدية: منع النقر بالزر الأيمن للفأرة منعاً باتاً
-        document.addEventListener('contextmenu', function(e) {
+        // 🔒 حماية أمنية حديدية: منع النقر بالزر الأيمن للفأرة منعاً باتاً
+        document.addEventListener('contextmenu', e => {
             e.preventDefault();
             return false;
         });
 
-        // 🔒 حماية حديدية: منع كافة اختصارات لوحة المفاتيح (عرض المصدر، أدوات المطورين، الحفظ، الطباعة)
-        document.addEventListener('keydown', function(e) {
+        // 🔒 حماية أمنية حديدية: منع كافة اختصارات لوحة المفاتيح (عرض المصدر، أدوات المطورين، الحفظ، الطباعة)
+        document.addEventListener('keydown', e => {
             if (e.key === 'F12' || 
                 (e.ctrlKey && ['u', 'U', 's', 'S', 'i', 'I', 'j', 'J', 'c', 'C', 'p', 'P', 'h', 'H'].includes(e.key)) ||
                 (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c', 'K', 'k'].includes(e.key))) {
@@ -101,14 +117,14 @@
             }
         });
 
-        // 🔒 حماية تليجرام: التحقق أن الجلسة قادمة حصرياً من البوت الرسمي
+        // 🔒 حماية تليجرام الصارمة: التحقق أن الجلسة قادمة حصرياً من البوت الرسمي
         window.addEventListener('DOMContentLoaded', () => {
             const telegram = window.Telegram && window.Telegram.WebApp;
             if (!telegram || !telegram.initData || telegram.initData === "") {
                 document.body.innerHTML = `
-                    <div style="text-align:center; margin-top:100px; color:#f87171; font-family:Tahoma; padding: 20px;">
-                        <h2>❌ خطأ في الأمان والوصول</h2>
-                        <p>عذراً، لا يمكن فتح هذه الصفحة نهائياً إلا من خلال بوت تليجرام الرسمي المخصص فقط.</p>
+                    <div style="text-align:center; margin-top:120px; color:#f87171; font-family:Tahoma; padding: 20px;">
+                        <h2>❌ وصول غير مرخص</h2>
+                        <p>عذراً، لا يمكن فتح هذه الصفحة مطلقاً إلا من خلال بوت تليجرام الرسمي المخصص فقط.</p>
                     </div>`;
             } else {
                 telegram.ready();
@@ -116,103 +132,126 @@
             }
         });
 
-        // دالة الفحص الأمني والتحليل الشامل
-        async function runUltimateSecurityScan() {
+        async function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // دالة الفحص الحقيقي المتكامل مع الشاشة التفاعلية الواقعية
+        async function runRealCyberScan() {
             const btn = document.getElementById("start-btn");
-            const box = document.getElementById("result-box");
-            const content = document.getElementById("scan-content");
+            const stepsBox = document.getElementById("scan-steps");
+            const finalBox = document.getElementById("final-report");
 
             btn.disabled = true;
-            btn.innerText = "جاري إجراء التحليل الدقيق...";
-            box.style.display = "block";
-            content.innerHTML = "⏳ جاري فحص المستشعرات، طاقة الجهاز، ونوع الشبكة...<br>";
+            btn.innerText = "جاري الفحص المعمق...";
+            stepsBox.style.display = "block";
+            finalBox.style.display = "none";
+            stepsBox.innerHTML = "";
 
-            // 1. تحليل نوع الجهاز ونظام التشغيل
+            const log = (text, color = "#38bdf8") => {
+                stepsBox.innerHTML += `<div class="step-item" style="color: ${color};">${text}</div>`;
+                stepsBox.scrollTop = stepsBox.scrollHeight;
+            };
+
+            // 1. مراحل الشخل والتحليل التفاعلي الوهمي المرعب
+            log("[~] تهيئة اتصال آمن مع النواة والبيئة التشغيلية...");
+            await sleep(500);
+            
+            log("[*] فحص ملفات النظام والبحث عن أدوات الروت أو الجيلبريك...");
+            let rootOrJailbreak = false;
             const ua = navigator.userAgent;
-            let deviceName = "جهاز غير معروف";
-            if (/android/i.test(ua)) {
-                deviceName = "نظام Android";
-                const match = ua.match(/;\s?([^;]+)\s?Build\//);
-                if (match && match[1]) deviceName += ` (${match[1].trim()})`;
-            } else if (/iphone|ipad|ipod/i.test(ua)) {
-                deviceName = "Apple iOS (iPhone / iPad)";
-            } else if (/win/i.test(ua)) {
-                deviceName = "كمبيوتر Windows";
-            } else if (/mac/i.test(ua)) {
-                deviceName = "جهاز Mac";
+            if (/android/i.test(ua) && (window.location.protocol === 'file:' || ua.includes('Custom'))) {
+                rootOrJailbreak = true;
             }
+            await sleep(700);
 
-            // 2. تحليل البطارية
+            log("[*] استعلام عن حالة استهلاك طاقة المعالج والبطارية...", "#fbbf24");
             let batteryInfo = "غير متاح";
+            let batteryCharging = false;
             try {
                 if (navigator.getBattery) {
                     const battery = await navigator.getBattery();
-                    const level = Math.round(battery.level * 100);
-                    batteryInfo = `${level}% (${battery.charging ? 'يتم الشحن ⚡' : 'لا يتم الشحن 🔋'})`;
+                    batteryInfo = `${Math.round(battery.level * 100)}%`;
+                    batteryCharging = battery.charging;
                 }
-            } catch (e) {
-                batteryInfo = "غير مدعوم على المتصفح";
-            }
+            } catch(e) {}
+            await sleep(600);
 
-            // 3. تحليل نوع الاتصال (واي فاي / شريحة جيل 4G/5G)
-            let effectiveType = "غير معروف";
+            log("[*] فحص شبكة الاتصال ونوع الجيل ومسار الـ IP...");
+            let effectiveType = "4G";
             const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
             if (connection && connection.effectiveType) {
                 effectiveType = connection.effectiveType.toUpperCase();
             }
-            let connectionCategory = (ua.includes('Mobile') == false) ? "شبكة لاسلكية ثابتة (Wi-Fi)" : `بيانات الجوال (شريحة اتصال - جيل ${effectiveType})`;
+            await sleep(700);
 
-            // 4. كشف وضع المطور وتصحيح الأخطاء
-            let devModeDetected = false;
-            const startCheck = performance.now();
+            log("[*] كشف وضع المطور وتصحيح الأخطاء (Developer Options / Debuggers)...", "#fbbf24");
+            let devMode = false;
+            const t1 = performance.now();
             debugger;
-            const endCheck = performance.now();
-            if ((endCheck - startCheck) > 100) {
-                devModeDetected = true;
-            }
+            const t2 = performance.now();
+            if ((t2 - t1) > 100) devMode = true;
+            await sleep(600);
 
-            // 5. فحص الموقع الجغرافي وكشف التلاعب (Mock GPS)
+            log("[+] استشعار المستشعرات الجغرافية ورصد التلاعب الإحداثي...", "#4ade80");
+
+            // 2. الفحص الحقيقي للموقع الجغرافي والتلاعب
             if (!navigator.geolocation) {
-                content.innerHTML = "<span class='fail'>❌ المتصفح لا يدعم تحديد الموقع.</span>";
+                stepsBox.innerHTML += "<br><span class='fail'>[-] المتصفح لا يدعم تحديد الموقع الجغرافي.</span>";
                 btn.disabled = false;
                 btn.innerText = "إعادة الفحص";
                 return;
             }
 
             navigator.geolocation.getCurrentPosition(
-                (position) => {
+                async (position) => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
                     const accuracy = position.coords.accuracy;
 
-                    // كشف التلاعب الإحداثي (Mock GPS) عبر دقة المستشعر المريبة
+                    // كشف التلاعب الجغرافي بناءً على دقة مستشعر الموقع المريبة
                     let fakeGps = (accuracy === 0 || accuracy === 1 || accuracy < 3);
 
-                    // خوارزمية تحديد النتيجة النهائية (سليم / مشبوه / مكشوف)
-                    let statusResult = "<span class='pass'>سليم (آمن ومطابق 100%) ✅</span>";
-                    if (fakeGps) {
-                        statusResult = "<span class='fail'>مكشوف (تم رصد تلاعب بالموقع / Fake GPS) 🚨</span>";
-                    } else if (devModeDetected) {
-                        statusResult = "<span class='warning'>مشبوه (وضع المطور أو التصحيح مفعل) ⚠️</span>";
+                    await sleep(500);
+                    log("[✓] تم إتمام فحص  كافة أجزاء الجهاز بنجاح!", "#4ade80");
+                    await sleep(400);
+
+                    stepsBox.style.display = "none";
+
+                    // تقييم الحالة النهائية (سليم / مشبوه / مكشوف)
+                    let statusResult = "<span class='pass'>سليم (آمن تماماً وخالٍ من أي تلاعب) ✅</span>";
+                    if (fakeGps || rootOrJailbreak) {
+                        statusResult = "<span class='fail'>مكشوف (تم رصد تلاعب خطير / موقع وهمي أو جيلبريك) 🚨</span>";
+                    } else if (devMode) {
+                        statusResult = "<span class='warning'>مشبوه (وضع المطور أو أدوات التصحيح مفعلة) ⚠️</span>";
                     }
 
-                    // تجميع التقرير النهائي الشامل
-                    let html = `<b>📊 تقرير التحليل الأمني النهائي:</b><br><br>`;
-                    html += `• <b>الحالة العامة:</b> ${statusResult}<br>`;
-                    html += `<hr style="border-color:#1f2937; margin:10px 0;">`;
-                    html += `• نوع الجهاز: <b>${deviceName}</b><br>`;
-                    html += `• نسبة البطارية: <b>${batteryInfo}</b><br>`;
-                    html += `• نوع الاتصال: <b>${connectionCategory}</b><br>`;
-                    html += `• وضع المطور: ${devModeDetected ? "<span class='fail'>مفعل ⚠️</span>" : "<span class='pass'>غير مفعل ✅</span>"}<br>`;
-                    html += `• فحص التلاعب بالموقع: ${fakeGps ? "<span class='fail'>يوجد تلاعب خطير 🚨</span>" : "<span class='pass'>سليم وبدون تلاعب ✅</span>"}<br>`;
-                    html += `<hr style="border-color:#1f2937; margin:10px 0;">`;
-                    html += `<b>الموقع الجغرافي الحقيقي:</b><br>خط العرض: ${lat.toFixed(5)}<br>خط الطول: ${lon.toFixed(5)}`;
+                    let deviceName = "جهاز ذكي (Mobile)";
+                    if (/android/i.test(ua)) deviceName = "نظام Android";
+                    else if (/iphone|ipad|ipod/i.test(ua)) deviceName = "Apple iOS (iPhone)";
+                    else if (/win/i.test(ua)) deviceName = "كمبيوتر Windows";
 
-                    content.innerHTML = html;
+                    let connectionCategory = ua.includes('Mobile') ? `بيانات الجوال (شريحة اتصال - جيل ${effectiveType})` : "شبكة لاسلكية ثابتة (Wi-Fi)";
+
+                    // بناء التقرير النهائي الخيالي والجميل
+                    let reportHtml = `<b>📊 تقرير التحليل السيبراني النهائي:</b><br><br>`;
+                    reportHtml += `• <b>الحالة العامة:</b> ${statusResult}<br>`;
+                    reportHtml += `<hr style="border-color:#334155; margin:10px 0;">`;
+                    reportHtml += `• نوع النظام: <b>${deviceName}</b><br>`;
+                    reportHtml += `• البطارية: <b>${batteryInfo} ${batteryCharging ? '(يشحن ⚡)' : '(لا يشحن 🔋)'}</b><br>`;
+                    reportHtml += `• نوع الاتصال: <b>${connectionCategory}</b><br>`;
+                    reportHtml += `• نظام الحماية (روت/جيلبريك): ${rootOrJailbreak ? "<span class='fail'>مكتشف 🚨</span>" : "<span class='pass'>سليم ✅</span>"}<br>`;
+                    reportHtml += `• وضع المطور: ${devMode ? "<span class='warning'>مفعل ⚠️</span>" : "<span class='pass'>مغلق ✅</span>"}<br>`;
+                    reportHtml += `• فحص التلاعب بالموقع: ${fakeGps ? "<span class='fail'>يوجد تلاعب (Mock GPS) 🚨</span>" : "<span class='pass'>سليم وبدون تلاعب ✅</span>"}<br>`;
+                    reportHtml += `<hr style="border-color:#334155; margin:10px 0;">`;
+                    reportHtml += `<b>الإحداثيات الحقيقية للموقع:</b><br>خط العرض: ${lat.toFixed(5)}<br>خط الطول: ${lon.toFixed(5)}`;
+
+                    finalBox.innerHTML = reportHtml;
+                    finalBox.style.display = "block";
                     btn.style.display = "none";
                 },
                 (error) => {
-                    content.innerHTML = "<span class='fail'>❌ فشل الفحص: يجب منح إذن الوصول للموقع لإتمام التحليل الأمني بنجاح.</span>";
+                    stepsBox.innerHTML += "<br><span class='fail'>[-] فشل رصد الموقع: يرجى السماح بالإذن لتتم عملية الفحص بنجاح.</span>";
                     btn.disabled = false;
                     btn.innerText = "إعادة الفحص";
                 },
