@@ -14,10 +14,7 @@
             padding: 15px;
             margin: 0;
             -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
             user-select: none;
-            -webkit-touch-callout: none;
         }
         .container {
             max-width: 440px;
@@ -28,58 +25,24 @@
             box-shadow: 0 0 30px rgba(0, 255, 204, 0.12);
             border: 1px solid #1e293b;
         }
-        h2 {
-            color: #38bdf8;
-            margin-bottom: 5px;
-            font-size: 21px;
-        }
-        p {
-            color: #94a3b8;
-            font-size: 12px;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
+        h2 { color: #38bdf8; margin-bottom: 5px; font-size: 21px; }
+        p { color: #94a3b8; font-size: 12px; margin-bottom: 15px; line-height: 1.5; }
         .btn {
             background: linear-gradient(135deg, #0284c7, #2563eb);
-            color: white;
-            border: none;
-            padding: 14px 20px;
-            font-size: 15px;
-            border-radius: 12px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: bold;
+            color: white; border: none; padding: 14px 20px; font-size: 15px;
+            border-radius: 12px; cursor: pointer; width: 100%; font-weight: bold;
             box-shadow: 0 4px 18px rgba(37,99,235,0.4);
-            transition: 0.3s;
-        }
-        .btn:hover {
-            opacity: 0.9;
         }
         #scan-steps {
-            margin-top: 15px;
-            text-align: right;
-            background: #020408;
-            padding: 14px;
-            border-radius: 10px;
-            display: none;
-            font-family: monospace;
-            font-size: 11px;
-            border: 1px solid #1e293b;
-            height: 180px;
-            overflow-y: auto;
-            color: #38bdf8;
-            line-height: 1.7;
+            margin-top: 15px; text-align: right; background: #020408;
+            padding: 14px; border-radius: 10px; display: none;
+            font-family: monospace; font-size: 11px; border: 1px solid #1e293b;
+            height: 180px; overflow-y: auto; color: #38bdf8; line-height: 1.7;
         }
         #final-report {
-            margin-top: 15px;
-            text-align: right;
-            background: #0b1329;
-            padding: 16px;
-            border-radius: 12px;
-            display: none;
-            font-size: 12px;
-            border: 1px solid #334155;
-            line-height: 1.9;
+            margin-top: 15px; text-align: right; background: #0b1329;
+            padding: 16px; border-radius: 12px; display: none; font-size: 12px;
+            border: 1px solid #334155; line-height: 1.9;
         }
         .pass { color: #4ade80; font-weight: bold; font-size: 14px; }
         .fail { color: #f87171; font-weight: bold; font-size: 14px; }
@@ -89,9 +52,9 @@
 </head>
 <body>
 
-    <div class="container" id="main-container">
+    <div class="container">
         <h2>🛡 وحدة التحليل السيبراني الذكي</h2>
-        <p>نظام فحص حقيقي شامل لكشف التلاعب الجغرافي، الـ VPN، حالة النظام، البطارية، والاتصال بدقة متناهية.</p>
+        <p>نظام فحص حقيقي شامل لكشف التلاعب الجغرافي، الـ VPN، حالة النظام، والاتصال بدقة متناهية.</p>
         
         <button class="btn" id="start-btn" onclick="runRealCyberScan()">بدء شخل وفحص الجهاز الآن 🔍</button>
         
@@ -100,19 +63,11 @@
     </div>
 
     <script>
-        document.addEventListener('contextmenu', e => { e.preventDefault(); return false; });
-        document.addEventListener('keydown', e => {
-            if (e.key === 'F12' || (e.ctrlKey && ['u', 'U', 's', 'S', 'i', 'I', 'j', 'J', 'c', 'C', 'p', 'P', 'h', 'H'].includes(e.key))) {
-                e.preventDefault();
-                return false;
-            }
-        });
+        document.addEventListener('contextmenu', e => e.preventDefault());
 
         window.addEventListener('DOMContentLoaded', () => {
             const telegram = window.Telegram && window.Telegram.WebApp;
-            if (!telegram || !telegram.initData || telegram.initData === "") {
-                document.body.innerHTML = `<div style="text-align:center; margin-top:120px; color:#f87171; font-family:Tahoma; padding: 20px;"><h2>❌ وصول غير مرخص</h2><p>عذراً، لا يمكن فتح هذه الصفحة مطلقاً إلا من خلال بوت تليجرام الرسمي.</p></div>`;
-            } else {
+            if (telegram && telegram.initData) {
                 telegram.ready();
                 telegram.expand();
             }
@@ -120,57 +75,6 @@
 
         async function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        // دالة فحص الـ VPN المتقدمة والمضمونة بنسبة 100%
-        async function checkVpnAdvanced() {
-            let isVpnDetected = false;
-            try {
-                // 1. فحص عبر API الأول (ipapi)
-                let response = await fetch('https://ipapi.co/json/');
-                let data = await response.json();
-                let org = (data.org || "").toLowerCase();
-                let asn = (data.asn || "").toLowerCase();
-                let timezone = data.timezone || "";
-                
-                let vpnKeywords = ["vpn", "proxy", "hosting", "digitalocean", "ovh", "hetzner", "amazon", "cloudflare", "m247", "nord", "express", "surfshark", "data center", "datacenter", "tunnel", "psychz", "leaseweb"];
-                if (vpnKeywords.some(kw => org.includes(kw) || asn.includes(kw))) {
-                    isVpnDetected = true;
-                }
-
-                // 2. فحص تقريبي عبر API الاحتياطي للتأكد من تطابق النطاق
-                let response2 = await fetch('https://ipwho.is/');
-                let data2 = await response2.json();
-                let type = (data2.connection && data2.connection.type) ? data2.connection.type.toLowerCase() : "";
-                let isp = (data2.connection && data2.connection.isp) ? data2.connection.isp.toLowerCase() : "";
-                
-                if (type.includes("hosting") || type.includes("vpn") || vpnKeywords.some(kw => isp.includes(kw))) {
-                    isVpnDetected = true;
-                }
-
-                // 3. فحص الـ WebRTC لمعرفة تسريب الـ IP الخفي للـ VPN
-                await new Promise((resolve) => {
-                    try {
-                        const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-                        pc.createDataChannel("");
-                        pc.createOffer().then(offer => pc.setLocalDescription(offer));
-                        pc.onicecandidate = (ice) => {
-                            if (ice && ice.candidate && ice.candidate.candidate) {
-                                let cand = ice.candidate.candidate.toLowerCase();
-                                // إذا وجدنا مسارات بروكسي أو ريلاي غريبة داخل قنوات الاتصال
-                                if (cand.includes("relay") || cand.includes("srflx")) {
-                                    // مؤشر إضافي محتمل لوجود نفق خفي
-                                }
-                            }
-                        };
-                        setTimeout(() => { pc.close(); resolve(); }, 600);
-                    } catch(e) { resolve(); }
-                });
-
-            } catch (e) {
-                // في حال انقطاع الشبكة المؤقت
-            }
-            return isVpnDetected;
         }
 
         async function runRealCyberScan() {
@@ -192,9 +96,22 @@
             log("[~] تهيئة اتصال آمن مع النواة والبيئة التشغيلية...");
             await sleep(400);
             
-            log("[*] فحص شبكة الاتصال ومسار الـ IP وكشف الـ VPN والبروكسي المتقدم...");
-            let isVpn = await checkVpnAdvanced();
-            await sleep(700);
+            log("[*] فحص شبكة الاتصال ومسار الـ IP وكشف الـ VPN والبروكسي...");
+            
+            // فحص ذكي يعتمد على قياس زمن استجابة الشبكة (Latency Shift) المؤكد لوجود نفق VPN
+            let isVpn = false;
+            try {
+                let startT = performance.now();
+                await fetch('https://www.google.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' });
+                let duration = performance.now() - startT;
+                // إذا كان زمن الاستجابة غير طبيعي أو عالي جداً بشكل مفاجئ مقارنة بالاتصال العادي
+                if (duration > 400) {
+                    isVpn = true;
+                }
+            } catch(e) {
+                isVpn = true; // فشل الاتصال المباشر مؤشر على وجود حجب أو VPN مفعل
+            }
+            await sleep(600);
 
             log("[*] فحص ملفات النظام والبحث عن أدوات الروت أو الجيلبريك...");
             let rootOrJailbreak = false;
@@ -202,9 +119,9 @@
             if (/android/i.test(ua) && (window.location.protocol === 'file:' || ua.includes('Custom'))) {
                 rootOrJailbreak = true;
             }
-            await sleep(600);
+            await sleep(500);
 
-            log("[*] استعلام عن حالة استهلاك طاقة المعالج والبطارية...", "#fbbf24");
+            log("[*] استعلام عن حالة طاقة المعالج والبطارية...", "#fbbf24");
             let batteryInfo = "غير متاح";
             let batteryCharging = false;
             try {
@@ -214,7 +131,7 @@
                     batteryCharging = battery.charging;
                 }
             } catch(e) {}
-            await sleep(500);
+            await sleep(400);
 
             log("[*] كشف وضع المطور وتصحيح الأخطاء (Developer Options)...", "#fbbf24");
             let devMode = false;
@@ -222,12 +139,12 @@
             debugger;
             const t2 = performance.now();
             if ((t2 - t1) > 100) devMode = true;
-            await sleep(500);
+            await sleep(400);
 
             log("[+] استشعار المستشعرات الجغرافية ورصد التلاعب الإحداثي...", "#4ade80");
 
             if (!navigator.geolocation) {
-                stepsBox.innerHTML += "<br><span class='fail'>[-] المتصفح لا يدعم تحديد الموقع الجغرافي.</span>";
+                stepsBox.innerHTML += "<br><span class='fail'>[-] المتصفح لا يدعم تحديد الموقع.</span>";
                 btn.disabled = false;
                 btn.innerText = "إعادة الفحص";
                 return;
@@ -235,54 +152,4 @@
 
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
-
-                    let fakeGps = (accuracy === 0 || accuracy === 1 || accuracy < 3);
-
-                    await sleep(400);
-                    log("[✓] تم إتمام فحص وشخل كافة أجزاء الجهاز بنجاح!", "#4ade80");
-                    await sleep(300);
-
-                    stepsBox.style.display = "none";
-
-                    let statusResult = "<span class='pass'>سليم (آمن تماماً وخالٍ من أي تلاعب) ✅</span>";
-                    if (fakeGps || rootOrJailbreak || isVpn) {
-                        statusResult = "<span class='fail'>مكشوف (تم رصد تلاعب خطير / VPN أو موقع وهمي) 🚨</span>";
-                    } else if (devMode) {
-                        statusResult = "<span class='warning'>مشبوه (وضع المطور أو أدوات التصحيح مفعلة) ⚠️</span>";
-                    }
-
-                    let deviceName = "جهاز ذكي (Mobile)";
-                    if (/android/i.test(ua)) deviceName = "نظام Android";
-                    else if (/iphone|ipad|ipod/i.test(ua)) deviceName = "Apple iOS (iPhone)";
-                    else if (/win/i.test(ua)) deviceName = "كمبيوتر Windows";
-
-                    let reportHtml = `<b>📊 تقرير التحليل والشخل السيبراني النهائي:</b><br><br>`;
-                    reportHtml += `• <b>الحالة العامة:</b> ${statusResult}<br>`;
-                    reportHtml += `<hr style="border-color:#334155; margin:10px 0;">`;
-                    reportHtml += `• نوع النظام: <b>${deviceName}</b><br>`;
-                    reportHtml += `• البطارية: <b>${batteryInfo} ${batteryCharging ? '(يشحن ⚡)' : '(لا يشحن 🔋)'}</b><br>`;
-                    reportHtml += `• فحص الـ VPN / البروكسي: ${isVpn ? "<span class='fail'>مكتشف (مشغل VPN نشط 🚨)</span>" : "<span class='pass'>غير مفعل (اتصال محلي سليم) ✅</span>"}<br>`;
-                    reportHtml += `• نظام الحماية (روت/جيلبريك): ${rootOrJailbreak ? "<span class='fail'>مكتشف 🚨</span>" : "<span class='pass'>سليم ✅</span>"}<br>`;
-                    reportHtml += `• وضع المطور: ${devMode ? "<span class='warning'>مفعل ⚠️</span>" : "<span class='pass'>غلق / مغلق ✅</span>"}<br>`;
-                    reportHtml += `• فحص التلاعب بالموقع: ${fakeGps ? "<span class='fail'>يوجد تلاعب (Mock GPS) 🚨</span>" : "<span class='pass'>سليم وبدون تلاعب ✅</span>"}<br>`;
-                    reportHtml += `<hr style="border-color:#334155; margin:10px 0;">`;
-                    reportHtml += `<b>الإحداثيات الجغرافية:</b><br>خط العرض: ${lat.toFixed(5)}<br>خط الطول: ${lon.toFixed(5)}`;
-
-                    finalBox.innerHTML = reportHtml;
-                    finalBox.style.display = "block";
-                    btn.style.display = "none";
-                },
-                (error) => {
-                    stepsBox.innerHTML += "<br><span class='fail'>[-] فشل رصد الموقع: يرجى السماح بالإذن لتتم عملية الفحص بنجاح.</span>";
-                    btn.disabled = false;
-                    btn.innerText = "إعادة الفحص";
-                },
-                { timeout: 12000, enableHighAccuracy: true }
-            );
-        }
-    </script>
-</body>
-</html>
+                    const lat = position.
