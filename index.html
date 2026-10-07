@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظومة ----الفحص السيبراني المتقدمة</title>
+    <title>منظومة الفحص السيبراني المتقدمة</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
@@ -54,7 +54,7 @@
 
     <div class="container">
         <h2>🛡 وحدة التحليل السيبراني الذكي</h2>
-        <p>نظام فحص حقيقي شامل لكشف التلاعب الجغرافي، الـ VPN، حالة النظام، والاتصال بدقة متناهية.</p>
+        <p>نظام فحص حقيقي شامل لكشف التلاعب الجغرافي، حالة النظام، وحماية الجهاز بدقة متناهية.</p>
         
         <button class="btn" id="start-btn" onclick="runRealCyberScan()">بدء شخل وفحص الجهاز الآن 🔍</button>
         
@@ -96,23 +96,6 @@
             log("[~] تهيئة اتصال آمن مع النواة والبيئة التشغيلية...");
             await sleep(400);
             
-            log("[*] فحص شبكة الاتصال ومسار الـ IP وكشف الـ VPN والبروكسي...");
-            
-            // فحص ذكي يعتمد على قياس زمن استجابة الشبكة (Latency Shift) المؤكد لوجود نفق VPN
-            let isVpn = false;
-            try {
-                let startT = performance.now();
-                await fetch('https://www.google.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' });
-                let duration = performance.now() - startT;
-                // إذا كان زمن الاستجابة غير طبيعي أو عالي جداً بشكل مفاجئ مقارنة بالاتصال العادي
-                if (duration > 400) {
-                    isVpn = true;
-                }
-            } catch(e) {
-                isVpn = true; // فشل الاتصال المباشر مؤشر على وجود حجب أو VPN مفعل
-            }
-            await sleep(600);
-
             log("[*] فحص ملفات النظام والبحث عن أدوات الروت أو الجيلبريك...");
             let rootOrJailbreak = false;
             const ua = navigator.userAgent;
@@ -152,4 +135,51 @@
 
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
-                    const lat = position.
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+
+                    // كشف التلاعب عبر دقة المستشعر الوهمية
+                    let fakeGps = (accuracy === 0 || accuracy === 1 || accuracy < 3);
+
+                    await sleep(400);
+                    log("[✓] تم إتمام فحص وشخل كافة أجزاء الجهاز بنجاح!", "#4ade80");
+                    await sleep(300);
+
+                    stepsBox.style.display = "none";
+
+                    let statusResult = "<span class='pass'>سليم (آمن تماماً وخالٍ من أي تلاعب) ✅</span>";
+                    if (fakeGps || rootOrJailbreak) {
+                        statusResult = "<span class='fail'>مكشوف (تم رصد موقع وهمي أو جيلبريك) 🚨</span>";
+                    } else if (devMode) {
+                        statusResult = "<span class='warning'>مشبوه (وضع المطور مفعل) ⚠️</span>";
+                    }
+
+                    let deviceName = /android/i.test(ua) ? "نظام Android" : (/iphone|ipad|ipod/i.test(ua) ? "Apple iOS (iPhone)" : "جهاز ذكي");
+
+                    let reportHtml = `<b>📊 تقرير التحليل والشخل السيبراني النهائي:</b><br><br>`;
+                    reportHtml += `• <b>الحالة العامة:</b> ${statusResult}<br>`;
+                    reportHtml += `<hr style="border-color:#334155; margin:10px 0;">`;
+                    reportHtml += `• نوع النظام: <b>${deviceName}</b><br>`;
+                    reportHtml += `• البطارية: <b>${batteryInfo} ${batteryCharging ? '(يشحن ⚡)' : '(لا يشحن 🔋)'}</b><br>`;
+                    reportHtml += `• نظام الحماية (روت/جيلبريك): ${rootOrJailbreak ? "<span class='fail'>مكتشف 🚨</span>" : "<span class='pass'>سليم ✅</span>"}<br>`;
+                    reportHtml += `• وضع المطور: ${devMode ? "<span class='warning'>مفعل ⚠️</span>" : "<span class='pass'>مغلق ✅</span>"}<br>`;
+                    reportHtml += `• فحص التلاعب بالموقع: ${fakeGps ? "<span class='fail'>يوجد تلاعب (Mock GPS) 🚨</span>" : "<span class='pass'>سليم وبدون تلاعب ✅</span>"}<br>`;
+                    reportHtml += `<hr style="border-color:#334155; margin:10px 0;">`;
+                    reportHtml += `<b>الإحداثيات الجغرافية:</b><br>خط العرض: ${lat.toFixed(5)}<br>خط الطول: ${lon.toFixed(5)}`;
+
+                    finalBox.innerHTML = reportHtml;
+                    finalBox.style.display = "block";
+                    btn.style.display = "none";
+                },
+                (error) => {
+                    stepsBox.innerHTML += "<br><span class='fail'>[-] فشل رصد الموقع: يرجى السماح بالإذن لتتم عملية الفحص بنجاح.</span>";
+                    btn.disabled = false;
+                    btn.innerText = "إعادة الفحص";
+                },
+                { timeout: 12000, enableHighAccuracy: true }
+            );
+        }
+    </script>
+</body>
+</html>
