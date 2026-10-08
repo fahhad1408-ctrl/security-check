@@ -143,7 +143,7 @@
                     let fakeGps = (accuracy === 0 || accuracy === 1 || accuracy < 3);
 
                     await sleep(400);
-                    log("[✓] تم إتمام فحص وشخل كافة أجزاء الجهاز بنجاح!", "#4ade80");
+                    log("[✓] تم إتمام فحص كافة أجزاء الجهاز بنجاح!", "#4ade80");
                     await sleep(300);
 
                     stepsBox.style.display = "none";
@@ -157,7 +157,7 @@
 
                     let deviceName = /android/i.test(ua) ? "نظام Android" : (/iphone|ipad|ipod/i.test(ua) ? "Apple iOS (iPhone)" : "جهاز ذكي");
 
-                    let reportHtml = `<b>📊 تقرير التحليل والشخل السيبراني النهائي:</b><br><br>`;
+                    let reportHtml = `<b>📊 تقرير التحليل  السيبراني النهائي:</b><br><br>`;
                     reportHtml += `• <b>الحالة العامة:</b> ${statusResult}<br>`;
                     reportHtml += `<hr style="border-color:#334155; margin:10px 0;">`;
                     reportHtml += `• نوع النظام: <b>${deviceName}</b><br>`;
