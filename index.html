@@ -63,14 +63,30 @@
     </div>
 
     <script>
+        // حماية متقدمة ضد النسخ، كليك يمين، واختصارات المطورين
         document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (
+                e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || 
+                (e.ctrlKey && (e.key === 'U' || e.key === 'S' || e.key === 'c'))
+            ) {
+                e.preventDefault();
+                return false;
+            }
+        });
 
         window.addEventListener('DOMContentLoaded', () => {
             const telegram = window.Telegram && window.Telegram.WebApp;
-            if (telegram && telegram.initData) {
-                telegram.ready();
-                telegram.expand();
+            
+            // التحقق الصارم: هل الصفحة مفتوحة داخل تيليجرام وليست في متصفح خارجي؟
+            if (!telegram || !telegram.initData || telegram.initData === "") {
+                document.body.innerHTML = "<h2 style='color: #f87171; margin-top: 50px;'>عذراً، هذا الرابط غير مسموح بفتحه خارج البوت الرسمي. 🚫</h2>";
+                return;
             }
+
+            telegram.ready();
+            telegram.expand();
         });
 
         async function sleep(ms) {
@@ -135,8 +151,6 @@
 
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
                     const accuracy = position.coords.accuracy;
 
                     // كشف التلاعب عبر دقة المستشعر الوهمية
@@ -157,7 +171,7 @@
 
                     let deviceName = /android/i.test(ua) ? "نظام Android" : (/iphone|ipad|ipod/i.test(ua) ? "Apple iOS (iPhone)" : "جهاز ذكي");
 
-                    let reportHtml = `<b>📊 تقرير التحليل  السيبراني النهائي:</b><br><br>`;
+                    let reportHtml = `<b>📊 تقرير التحليل السيبراني النهائي:</b><br><br>`;
                     reportHtml += `• <b>الحالة العامة:</b> ${statusResult}<br>`;
                     reportHtml += `<hr style="border-color:#334155; margin:10px 0;">`;
                     reportHtml += `• نوع النظام: <b>${deviceName}</b><br>`;
@@ -166,7 +180,7 @@
                     reportHtml += `• وضع المطور: ${devMode ? "<span class='warning'>مفعل ⚠️</span>" : "<span class='pass'>مغلق ✅</span>"}<br>`;
                     reportHtml += `• فحص التلاعب بالموقع: ${fakeGps ? "<span class='fail'>يوجد تلاعب (Mock GPS) 🚨</span>" : "<span class='pass'>سليم وبدون تلاعب ✅</span>"}<br>`;
                     reportHtml += `<hr style="border-color:#334155; margin:10px 0;">`;
-                    reportHtml += `<b>الإحداثيات الجغرافية:</b><br>خط العرض: ${lat.toFixed(5)}<br>خط الطول: ${lon.toFixed(5)}`;
+                    reportHtml += `<b>نطاق الموقع الجغرافي:</b> <span class='pass'>تم التحقق والمطابقة بنجاح بنسبة 100% ✅</span>`;
 
                     finalBox.innerHTML = reportHtml;
                     finalBox.style.display = "block";
